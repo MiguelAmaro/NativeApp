@@ -1,0 +1,61 @@
+version(2);
+
+project_name = "FitnessApp";
+
+patterns = 
+{
+    "*.c",
+    "*.h",
+    "*.bat",
+    "*.sh",
+    "*.4coder",
+};
+
+blacklist_patterns = 
+{
+    ".git",
+    ".build",
+};
+
+load_paths = {
+    .win = {
+        { .path =   ".", .recursive = false, .relative = true, },
+        { .path = "jni", .recursive = false, .relative = true, },
+    },
+};
+
+commands =
+{
+    .build =
+    {
+        .win              = "a.cmd build",
+        .out              = "*compilation*",
+        .footer_panel     = true,
+        .save_dirty_files = true,
+        .cursor_at_end    = false,
+    },
+    
+    .run =
+    {
+        .win              = "a.cmd run",
+        .footer_panel     = false,
+        .save_dirty_files = false,
+        .cursor_at_end    = false,
+    },
+    
+    .debug =
+    {
+        .win              = "a.cmd debug",
+        .footer_panel     = false,
+        .save_dirty_files = false,
+        .cursor_at_end    = false,
+    },
+};
+
+fkey_command =
+{
+    .F1  = "build",
+    
+    .F12 = "run",
+    .F11 = "debug",
+};
