@@ -7,6 +7,8 @@
 #include <android/asset_manager.h>
 #include <android_native_app_glue.h>
 
+#include "types.h"
+
 #define LOG(...) ((void)__android_log_print(ANDROID_LOG_INFO, "NativeExample", __VA_ARGS__))
 
 struct engine
