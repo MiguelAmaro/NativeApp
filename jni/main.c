@@ -11,17 +11,17 @@
 
 struct engine
 {
-  struct android_app* app;
+  struct android_app* App;
   
-  int active;
-  EGLDisplay display;
-  EGLSurface surface;
-  EGLContext context;
-  int32_t width;
-  int32_t height;
+  int Active;
+  EGLDisplay Display;
+  EGLSurface Surface;
+  EGLContext Context;
+  int32_t Width;
+  int32_t Height;
   
-  GLuint buffer;
-  GLuint shader;
+  GLuint Buffer;
+  GLuint Shader;
 };
 
 static int engine_init_display(struct engine* engine)
@@ -64,10 +64,10 @@ static int engine_init_display(struct engine* engine)
     return -1;
   }
   
-  ANativeWindow_setBuffersGeometry(engine->app->window, 0, 0, format);
+  ANativeWindow_setBuffersGeometry(engine->App->window, 0, 0, format);
   
   EGLSurface surface;
-  if (!(surface = eglCreateWindowSurface(display, config, engine->app->window, NULL)))
+  if (!(surface = eglCreateWindowSurface(display, config, engine->App->window, NULL)))
   {
     LOG("error with eglCreateWindowSurface");
     return -1;
@@ -95,13 +95,13 @@ static int engine_init_display(struct engine* engine)
   eglQuerySurface(display, surface, EGL_WIDTH, &w);
   eglQuerySurface(display, surface, EGL_HEIGHT, &h);
   
-  engine->display = display;
-  engine->context = context;
-  engine->surface = surface;
-  engine->width = w;
-  engine->height = h;
+  engine->Display = display;
+  engine->Context = context;
+  engine->Surface = surface;
+  engine->Width = w;
+  engine->Height = h;
   
-  AAsset* vasset = AAssetManager_open(engine->app->activity->assetManager, "vertex.glsl", AASSET_MODE_BUFFER);
+  AAsset* vasset = AAssetManager_open(engine->App->activity->assetManager, "vertex.glsl", AASSET_MODE_BUFFER);
   if (!vasset)
   {
     LOG("error opening vertex.glsl");
@@ -116,7 +116,7 @@ static int engine_init_display(struct engine* engine)
   
   AAsset_close(vasset);
   
-  AAsset* fasset = AAssetManager_open(engine->app->activity->assetManager, "fragment.glsl", AASSET_MODE_BUFFER);
+  AAsset* fasset = AAssetManager_open(engine->App->activity->assetManager, "fragment.glsl", AASSET_MODE_BUFFER);
   if (!fasset)
   {
     LOG("error opening fragment.glsl");
@@ -155,15 +155,15 @@ static int engine_init_display(struct engine* engine)
   glBindBuffer(GL_ARRAY_BUFFER, b);
   glBufferData(GL_ARRAY_BUFFER, sizeof(buf), buf, GL_STATIC_DRAW);
   
-  engine->buffer = b;
-  engine->shader = p;
+  engine->Buffer = b;
+  engine->Shader = p;
   
   return 0;
 }
 
 static void EngineDrawFrame(struct engine* engine)
 {
-  if (engine->display == NULL)
+  if (engine->Display == NULL)
   {
     return;
   }
@@ -171,9 +171,9 @@ static void EngineDrawFrame(struct engine* engine)
   glClearColor(0.258824f, 0.258824f, 0.435294f, 1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   
-  glUseProgram(engine->shader);
+  glUseProgram(engine->Shader);
   
-  glBindBuffer(GL_ARRAY_BUFFER, engine->buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, engine->Buffer);
   glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, (2+3)*sizeof(float), NULL);
   glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, (2+3)*sizeof(float), (void*)(2*sizeof(float)));
   glEnableVertexAttribArray(0);
@@ -181,31 +181,31 @@ static void EngineDrawFrame(struct engine* engine)
   
   glDrawArrays(GL_TRIANGLES, 0, 3);
   
-  eglSwapBuffers(engine->display, engine->surface);
+  eglSwapBuffers(engine->Display, engine->Surface);
 }
 
 static void EngineTermDisplay(struct engine* engine)
 {
-  if (engine->display != EGL_NO_DISPLAY)
+  if (engine->Display != EGL_NO_DISPLAY)
   {
-    glDeleteProgram(engine->shader);
-    glDeleteBuffers(1, &engine->buffer);
+    glDeleteProgram(engine->Shader);
+    glDeleteBuffers(1, &engine->Buffer);
     
-    eglMakeCurrent(engine->display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-    if (engine->context != EGL_NO_CONTEXT)
+    eglMakeCurrent(engine->Display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    if (engine->Context != EGL_NO_CONTEXT)
     {
-      eglDestroyContext(engine->display, engine->context);
+      eglDestroyContext(engine->Display, engine->Context);
     }
-    if (engine->surface != EGL_NO_SURFACE)
+    if (engine->Surface != EGL_NO_SURFACE)
     {
-      eglDestroySurface(engine->display, engine->surface);
+      eglDestroySurface(engine->Display, engine->Surface);
     }
-    eglTerminate(engine->display);
+    eglTerminate(engine->Display);
   }
-  engine->active = 0;
-  engine->display = EGL_NO_DISPLAY;
-  engine->context = EGL_NO_CONTEXT;
-  engine->surface = EGL_NO_SURFACE;
+  engine->Active = 0;
+  engine->Display = EGL_NO_DISPLAY;
+  engine->Context = EGL_NO_CONTEXT;
+  engine->Surface = EGL_NO_SURFACE;
 }
 
 static int32_t EngineHandleInput(struct android_app* app, AInputEvent* event)
@@ -219,7 +219,7 @@ static void EngineHandleCmd(struct android_app* app, int32_t cmd)
   switch (cmd)
   {
     case APP_CMD_INIT_WINDOW:
-    if (engine->app->window != NULL)
+    if (engine->App->window != NULL)
     {
       engine_init_display(engine);
       EngineDrawFrame(engine);
@@ -231,11 +231,11 @@ static void EngineHandleCmd(struct android_app* app, int32_t cmd)
     break;
     
     case APP_CMD_GAINED_FOCUS:
-    engine->active = 1;
+    engine->Active = 1;
     break;
     
     case APP_CMD_LOST_FOCUS:
-    engine->active = 0;
+    engine->Active = 0;
     EngineDrawFrame(engine);
     break;
   }
@@ -249,7 +249,7 @@ void android_main(struct android_app* State)
   State->userData = &Engine;
   State->onAppCmd = EngineHandleCmd;
   State->onInputEvent = EngineHandleInput;
-  Engine.app = State;
+  Engine.App = State;
   
   while (1)
   {
@@ -257,7 +257,7 @@ void android_main(struct android_app* State)
     int Events;
     struct android_poll_source* Source;
     
-    while ((Ident=ALooper_pollAll(Engine.active ? 0 : -1, NULL, &Events, (void**)&Source)) >= 0)
+    while ((Ident=ALooper_pollAll(Engine.Active ? 0 : -1, NULL, &Events, (void**)&Source)) >= 0)
     {
       if (Source != NULL)
       {
@@ -271,7 +271,7 @@ void android_main(struct android_app* State)
       }
     }
     
-    if (Engine.active)
+    if (Engine.Active)
     {
       EngineDrawFrame(&Engine);
     }
