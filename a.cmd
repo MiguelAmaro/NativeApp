@@ -2,19 +2,12 @@
 
 set APK=NativeExample.apk
 
-
 set PROJECT_DIR=%cd%
 
 if "%ANDROID_NDK%" equ "" set ANDROID_NDK=F:\Dev_Tools\android\ndk
 if "%ANDROID_SDK%" equ "" set ANDROID_SDK=F:\Dev_Tools\android\sdk
 if "%JAVA_JDK%" equ "" set JAVA_JDK=F:\Dev_Tools\jdk\jdk-17.0.1
 
-
-
-
-if "%ANDROID_NDK%" equ "" set ANDROID_NDK=F:\Dev_Tools\android\ndk
-if "%ANDROID_SDK%" equ "" set ANDROID_SDK=F:\Dev_Tools\android\sdk
-if "%JAVA_JDK%" equ "" set JAVA_JDK=F:\Dev_Tools\jdk\jdk-17.0.1
 
 call :check || exit /b 1
 
@@ -54,7 +47,7 @@ goto :eof
 
 if not exist bin mkdir bin
 
-call "%ANDROID_NDK%\ndk-build.cmd" -j4 NDK_LIBS_OUT=lib\lib -C %PROJECT_DIR% || exit /b 1
+call "%ANDROID_NDK%\ndk-build.cmd" -j4 NDK_LIBS_OUT=lib\lib -C %PROJECT_DIR%\jni || exit /b 1
 
 "%ANDROID_SDK%\build-tools\%BUILD_TOOLS%\aapt.exe" package -f -M AndroidManifest.xml -I "%ANDROID_SDK%\platforms\%PLATFORM%\android.jar" -A assets -F bin\%APK%.build lib
 if ERRORLEVEL 1 exit /b 1
