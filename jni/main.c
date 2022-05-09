@@ -161,7 +161,7 @@ static int engine_init_display(struct engine* engine)
   return 0;
 }
 
-static void engine_draw_frame(struct engine* engine)
+static void EngineDrawFrame(struct engine* engine)
 {
   if (engine->display == NULL)
   {
@@ -184,7 +184,7 @@ static void engine_draw_frame(struct engine* engine)
   eglSwapBuffers(engine->display, engine->surface);
 }
 
-static void engine_term_display(struct engine* engine)
+static void EngineTermDisplay(struct engine* engine)
 {
   if (engine->display != EGL_NO_DISPLAY)
   {
@@ -208,12 +208,12 @@ static void engine_term_display(struct engine* engine)
   engine->surface = EGL_NO_SURFACE;
 }
 
-static int32_t engine_handle_input(struct android_app* app, AInputEvent* event)
+static int32_t EngineHandleInput(struct android_app* app, AInputEvent* event)
 {
   return 0;
 }
 
-static void engine_handle_cmd(struct android_app* app, int32_t cmd)
+static void EngineHandleCmd(struct android_app* app, int32_t cmd)
 {
   struct engine* engine = (struct engine*)app->userData;
   switch (cmd)
@@ -222,12 +222,12 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd)
     if (engine->app->window != NULL)
     {
       engine_init_display(engine);
-      engine_draw_frame(engine);
+      EngineDrawFrame(engine);
     }
     break;
     
     case APP_CMD_TERM_WINDOW:
-    engine_term_display(engine);
+    EngineTermDisplay(engine);
     break;
     
     case APP_CMD_GAINED_FOCUS:
@@ -236,44 +236,44 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd)
     
     case APP_CMD_LOST_FOCUS:
     engine->active = 0;
-    engine_draw_frame(engine);
+    EngineDrawFrame(engine);
     break;
   }
 }
 
-void android_main(struct android_app* state)
+void android_main(struct android_app* State)
 {
-  struct engine engine;
-  memset(&engine, 0, sizeof(engine));
+  struct engine Engine;
+  memset(&Engine, 0, sizeof(Engine));
   
-  state->userData = &engine;
-  state->onAppCmd = engine_handle_cmd;
-  state->onInputEvent = engine_handle_input;
-  engine.app = state;
+  State->userData = &Engine;
+  State->onAppCmd = EngineHandleCmd;
+  State->onInputEvent = EngineHandleInput;
+  Engine.app = State;
   
   while (1)
   {
-    int ident;
-    int events;
-    struct android_poll_source* source;
+    int Ident;
+    int Events;
+    struct android_poll_source* Source;
     
-    while ((ident=ALooper_pollAll(engine.active ? 0 : -1, NULL, &events, (void**)&source)) >= 0)
+    while ((Ident=ALooper_pollAll(Engine.active ? 0 : -1, NULL, &Events, (void**)&Source)) >= 0)
     {
-      if (source != NULL)
+      if (Source != NULL)
       {
-        source->process(state, source);
+        Source->process(State, Source);
       }
       
-      if (state->destroyRequested != 0)
+      if (State->destroyRequested != 0)
       {
-        engine_term_display(&engine);
+        EngineTermDisplay(&Engine);
         return;
       }
     }
     
-    if (engine.active)
+    if (Engine.active)
     {
-      engine_draw_frame(&engine);
+      EngineDrawFrame(&Engine);
     }
   }
 }
