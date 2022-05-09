@@ -217,6 +217,40 @@ static void EngineTermDisplay(struct engine* Engine)
 
 static int32_t EngineHandleInput(struct android_app* App, AInputEvent* Event)
 {
+  // NOTE(MIGUEL): do i even need to take input in this function?????
+  if((AInputEvent_getSource(Event) == AINPUT_SOURCE_TOUCHSCREEN) &&
+     (AInputEvent_getType  (Event) == AINPUT_EVENT_TYPE_MOTION))
+  {
+    u32 Action   = AMotionEvent_getAction(Event);
+    u32 PtrIndex = ((Action >>  AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT));
+    
+    
+    GlobalTouchPos.x = AMotionEvent_getRawX(Event,
+                                            PtrIndex);
+    
+    GlobalTouchPos.y = AMotionEvent_getRawY(Event,
+                                            PtrIndex);
+    
+    LOG("input| x: %f, y: %f", GlobalTouchPos.x, GlobalTouchPos.y);
+    switch(Action)
+    {
+      case AMOTION_EVENT_ACTION_POINTER_DOWN:
+      {
+        GlobalTouchPos.x = AMotionEvent_getRawX(Event,
+                                                PtrIndex) /  AINPUT_MOTION_RANGE_X;
+        
+        GlobalTouchPos.y = AMotionEvent_getRawY(Event,
+                                                PtrIndex) /  AINPUT_MOTION_RANGE_Y;
+        
+        
+      } break;
+      default:
+      {
+        
+      } break;
+    }
+    
+  }
   return 0;
 }
 
