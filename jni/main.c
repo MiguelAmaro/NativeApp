@@ -195,8 +195,8 @@ static void EngineDrawFrame(struct engine* Engine)
   glClearColor(0.258824f, 0.258824f, 0.435294f, 1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   
-#if 0
-  static ui Element =
+#if 1
+  static struct ui Element =
   {
     {500.0f, 500.0f},
     {200.0f, 200.0f},
@@ -204,7 +204,7 @@ static void EngineDrawFrame(struct engine* Engine)
   };
   
   
-  b32 InRect = IsInRectHalfDim(Element.Pos, V2Scale(Element.Dim, 0.5f), GlobalTouchPos);
+  b32 InRect = IsInRectHalfDim(Element.Pos, V2fScale(Element.Dim, 0.5f), GlobalTouchPos);
   LOG("%s | x: %f; y: %f", InRect?"true":"false", GlobalTouchPos.x, GlobalTouchPos.y);
   if(InRect) { Element.Pos = GlobalTouchPos; }
   glUniform2fv(glGetUniformLocation(Engine->Shader, "UPos"), 1, Element.Pos.v);
