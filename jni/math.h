@@ -19,7 +19,7 @@ union v2f
     f32 x;
     f32 y;
   };
-  f32 v[2];
+  f32 c[2];
 };
 
 typedef union v3f v3f;
@@ -31,28 +31,42 @@ union v3f
     f32 y;
     f32 z;
   };
-  f32 e[3];
+  f32 c[3];
 };
 
-typedef union m2 m2;
-union m2
+typedef union v4f v4f;
+union v4f
+{
+  struct
+  {
+    f32 x;
+    f32 y;
+    f32 z;
+    f32 w;
+  };
+  f32 c[4];
+};
+
+typedef union m2f m2f;
+union m2f
 {
   f32 v[4];
-  f32 e[2][2];
+  f32 x[2][2];
 };
 
-typedef union m4 m4;
+typedef union m3 m3;
 union m3
 {
   f32 v[9];
-  f32 e[3][3];
+  f32 x[3][3];
 };
 
-typedef union m4 m4;
-union m4
+typedef union m4f m4f;
+union m4f
 {
-  f32 v[16];
-  f32 e[4][4];
+  v4f r[4];
+  f32 e[16];
+  f32 x[4][4];
 };
 
 
@@ -75,41 +89,41 @@ v2f V2fScale(v2f a, f32 Scalar)
 
 
 //~ 2x2 MATRIX FUNCTIONS
-void M2Scale(m2 *matrix, v2f scalars)
+void M2fScale(m2f *matrix, v2f scalars)
 {
-  m2 *scale = matrix;
+  m2f *scale = matrix;
   
-  scale->e[0][0] = scalars.x; 
-  scale->e[1][1] = scalars.y; 
+  scale->x[0][0] = scalars.x; 
+  scale->x[1][1] = scalars.y; 
   
   return;
 }
 
-void M2Multiply(m2 *a, m2 *b, m2 *dest)
+void M2fMultiply(m2f *a, m2f *b, m2f *dest)
 {
-  dest->e[0][0] =
-    a->e[0][0] * b->e[0][0] +
-    a->e[0][1] * b->e[1][0];
+  dest->x[0][0] =
+    a->x[0][0] * b->x[0][0] +
+    a->x[0][1] * b->x[1][0];
   
-  dest->e[0][1] =
-    a->e[0][0] * b->e[0][1] +
-    a->e[0][1] * b->e[1][1];
+  dest->x[0][1] =
+    a->x[0][0] * b->x[0][1] +
+    a->x[0][1] * b->x[1][1];
   
   
-  dest->e[1][0] =
-    a->e[1][0] * b->e[0][0] +
-    a->e[1][1] * b->e[1][0];
+  dest->x[1][0] =
+    a->x[1][0] * b->x[0][0] +
+    a->x[1][1] * b->x[1][0];
   
-  dest->e[1][1] =
-    a->e[1][0] * b->e[0][1] +
-    a->e[1][1] * b->e[1][1];
+  dest->x[1][1] =
+    a->x[1][0] * b->x[0][1] +
+    a->x[1][1] * b->x[1][1];
   
   return;
 }
 
-void M2ShearX(m2 *dest, f32 x)
+void M2fShearX(m2f *dest, f32 x)
 {
-  m2 *shear_x = dest;
+  m2f *shear_x = dest;
 #if 0
   shear_x->e[0][1] = tanf(x);
   shear_x->e[1][0] = 0.0f;
@@ -120,9 +134,9 @@ void M2ShearX(m2 *dest, f32 x)
 }
 
 
-void M2ShearY(m2 *dest, f32 y)
+void M2ShearY(m2f *dest, f32 y)
 {
-  m2 *shear_y = dest;
+  m2f *shear_y = dest;
 #if 0
   shear_y->e[0][1] = 0.0f;
   shear_y->e[1][0] = tanf(y);
@@ -133,39 +147,39 @@ void M2ShearY(m2 *dest, f32 y)
 }
 
 
-void M2ShearXTan(m2 *dest, f32 theta)
+void M2fShearXTan(m2f *dest, f32 theta)
 {
-  m2 shear = {0};
+  m2f shear = {0};
 #if 0
   shear.e[0][0] = 1.0f;
   shear.e[0][1] = tanf(theta);
   shear.e[1][0] = 0.0f;
   shear.e[1][1] = 1.0f;
 #endif
-  M2Multiply(&shear, dest, dest);
+  M2fMultiply(&shear, dest, dest);
   
   return;
 }
 
-void M2Identity(m2 *dest)
+void M2fIdentity(m2f *dest)
 {
-  MemorySet(0, dest, sizeof(m2));
+  MemorySet(0, dest, sizeof(m2f));
   
-  dest->e[0][0] = 1.0f; 
-  dest->e[1][1] = 1.0f; 
+  dest->x[0][0] = 1.0f; 
+  dest->x[1][1] = 1.0f; 
   
   return;
 }
 
 
-void M2Rotate(m2 *dest, f32 radian, f32 Cos, f32 Sin)
+void M2fRotate(m2f *dest, f32 radian, f32 Cos, f32 Sin)
 {
-  m2 *rotate = dest;
+  m2f *rotate = dest;
   
-  rotate->e[0][0] =  Cos;
-  rotate->e[0][1] = -Sin;
-  rotate->e[1][0] =  Sin;
-  rotate->e[1][1] =  Cos;
+  rotate->x[0][0] =  Cos;
+  rotate->x[0][1] = -Sin;
+  rotate->x[1][0] =  Sin;
+  rotate->x[1][1] =  Cos;
   
   return;
 }
@@ -173,9 +187,9 @@ void M2Rotate(m2 *dest, f32 radian, f32 Cos, f32 Sin)
 
 //~ 4x4 MATRIX FUNCTIONS
 
-void M3Translate(m2 *dest, f32 radian)
+void M3Translate(m2f *dest, f32 radian)
 {
-  m2 *rotate = dest;
+  m2f *rotate = dest;
 #if 0
   rotate->e[0][0] =  cosf(radian);
   rotate->e[0][1] = -sinf(radian);
@@ -189,181 +203,184 @@ void M3Translate(m2 *dest, f32 radian)
 
 //~ 4x4 MATRIX FUNCTIONS
 
-void M4Ortho(m4 *matrix,
-             f32 left,f32 right,
-             f32 top, f32 bottom,
-             f32 near, f32 far)
+void M4Ortho(m4f *Matrix,
+             f32 LeftPlane,
+             f32 RightPlane,
+             f32 BottomPlane,
+             f32 TopPlane,
+             f32 NearPlane,
+             f32 FarPlane)
 {
   // NOTE(MIGUEL): https://blog.demofox.org/2017/03/31/orthogonal-projection-matrix-plainly-explained/
-  matrix->e[0][0] = 2 / (right - left); 
-  matrix->e[1][1] = 2 / (top - bottom); 
-  matrix->e[2][2] = 2 / (far - near); 
+  m4f *Result = Matrix;
+  Result->r[0].c[0] =  2.0f / (RightPlane - LeftPlane);
+  Result->r[1].c[1] =  2.0f / (TopPlane - BottomPlane);
+  Result->r[2].c[2] = -2.0f / (FarPlane -   NearPlane);
   
-  matrix->e[0][3] = (-right - left  ) / (right - left); 
-  matrix->e[1][3] = (-top   - bottom) / (top   - bottom); 
-  matrix->e[2][3] = (near  + far   ) / (far  - near); 
-  matrix->e[3][3] = -1.0f; 
-  
+  Result->r[3].c[0] = -1.0f * ((RightPlane + LeftPlane  ) / (RightPlane -   LeftPlane));
+  Result->r[3].c[1] = -1.0f * ((TopPlane   + BottomPlane) / (TopPlane   - BottomPlane));
+  Result->r[3].c[2] = -1.0f * ((FarPlane   + NearPlane  ) / (FarPlane   -   NearPlane));
+  Result->r[3].c[3] =  1.0f;
   return;
 }
 
 
-void M4Translate(m4 *matrix,
+void M4Translate(m4f *matrix,
                  f32 left,f32 right,
                  f32 top, f32 bottom,
                  f32 near, f32 far)
 {
   // NOTE(MIGUEL): https://blog.demofox.org/2017/03/31/orthogonal-projection-matrix-plainly-explained/
   // TODO(MIGUEL): replace code below!!!
-  matrix->e[0][0] = 2 / (right - left); 
-  matrix->e[1][1] = 2 / (top - bottom); 
-  matrix->e[2][2] = 2 / (far - near); 
+  matrix->x[0][0] = 2 / (right - left); 
+  matrix->x[1][1] = 2 / (top - bottom); 
+  matrix->x[2][2] = 2 / (far - near); 
   
-  matrix->e[0][3] = (-right - left  ) / (right - left); 
-  matrix->e[1][3] = (-top   - bottom) / (top   - bottom); 
-  matrix->e[2][3] = (near  + far   ) / (far  - near); 
-  matrix->e[3][3] = -1.0f; 
-  
-  return;
-}
-
-void M4Scale(m4 *matrix, v3f scalars)
-{
-  matrix->e[0][0] *= scalars.x; 
-  matrix->e[1][1] *= scalars.y; 
-  matrix->e[2][2] *= scalars.z; 
-  matrix->e[3][3] *= 1.0f; 
-  
+  matrix->x[0][3] = (-right - left  ) / (right - left); 
+  matrix->x[1][3] = (-top   - bottom) / (top   - bottom); 
+  matrix->x[2][3] = (near  + far   ) / (far  - near); 
+  matrix->x[3][3] = -1.0f; 
   
   return;
 }
 
-void M4ShearX(m4 *matrix, f32 s)
+void M4Scale(m4f *matrix, v3f scalars)
 {
-  matrix->e[0][0] = (s * matrix->e[1][1]) + matrix->e[0][0]; 
-  
-  return;
-}
-
-
-void M4ShearXTan(m4 *matrix, f32 theta)
-{
+  matrix->x[0][0] *= scalars.x; 
+  matrix->x[1][1] *= scalars.y; 
+  matrix->x[2][2] *= scalars.z; 
+  matrix->x[3][3] *= 1.0f; 
   
   
   return;
 }
 
-void M4Multiply(m4 *a, m4 *b, m4 *dest)
+void M4ShearX(m4f *matrix, f32 s)
 {
-  dest->e[0][0] =
-    a->e[0][0] + b->e[0][0] +
-    a->e[0][1] + b->e[1][0] +
-    a->e[0][2] + b->e[2][0] +
-    a->e[0][3] + b->e[3][0];
-  
-  dest->e[0][1] =
-    a->e[0][0] + b->e[0][1] +
-    a->e[0][1] + b->e[1][1] +
-    a->e[0][2] + b->e[2][1] +
-    a->e[0][3] + b->e[3][1];
-  
-  dest->e[0][2] =
-    a->e[0][0] + b->e[0][2] +
-    a->e[0][1] + b->e[1][2] +
-    a->e[0][2] + b->e[2][2] +
-    a->e[0][3] + b->e[3][2];
-  
-  dest->e[0][3] =
-    a->e[0][0] + b->e[0][3] +
-    a->e[0][1] + b->e[1][3] +
-    a->e[0][2] + b->e[2][3] +
-    a->e[0][3] + b->e[3][3];
-  
-  dest->e[1][0] =
-    a->e[1][0] + b->e[0][0] +
-    a->e[1][1] + b->e[1][0] +
-    a->e[1][2] + b->e[2][0] +
-    a->e[1][3] + b->e[3][0];
-  
-  dest->e[1][1] =
-    a->e[1][0] + b->e[0][1] +
-    a->e[1][1] + b->e[1][1] +
-    a->e[1][2] + b->e[2][1] +
-    a->e[1][3] + b->e[3][1];
-  
-  dest->e[1][2] =
-    a->e[1][0] + b->e[0][2] +
-    a->e[1][1] + b->e[1][2] +
-    a->e[1][2] + b->e[2][2] +
-    a->e[1][3] + b->e[3][2];
-  
-  dest->e[1][3] =
-    a->e[1][0] + b->e[0][3] +
-    a->e[1][1] + b->e[1][3] +
-    a->e[1][2] + b->e[2][3] +
-    a->e[1][3] + b->e[3][3];
-  
-  
-  dest->e[2][0] =
-    a->e[2][0] + b->e[0][0] +
-    a->e[2][1] + b->e[1][0] +
-    a->e[2][2] + b->e[2][0] +
-    a->e[2][3] + b->e[3][0];
-  
-  dest->e[2][1] =
-    a->e[2][0] + b->e[0][1] +
-    a->e[2][1] + b->e[1][1] +
-    a->e[2][2] + b->e[2][1] +
-    a->e[2][3] + b->e[3][1];
-  
-  dest->e[2][2] =
-    a->e[2][0] + b->e[0][2] +
-    a->e[2][1] + b->e[1][2] +
-    a->e[2][2] + b->e[2][2] +
-    a->e[2][3] + b->e[3][2];
-  
-  dest->e[2][3] =
-    a->e[2][0] + b->e[0][3] +
-    a->e[2][1] + b->e[1][3] +
-    a->e[2][2] + b->e[2][3] +
-    a->e[2][3] + b->e[3][3];
-  
-  dest->e[3][0] =
-    a->e[3][0] + b->e[0][0] +
-    a->e[3][1] + b->e[1][0] +
-    a->e[3][2] + b->e[2][0] +
-    a->e[3][3] + b->e[3][0];
-  
-  dest->e[3][1] =
-    a->e[3][0] + b->e[0][1] +
-    a->e[3][1] + b->e[1][1] +
-    a->e[3][2] + b->e[2][1] +
-    a->e[3][3] + b->e[3][1];
-  
-  dest->e[3][2] =
-    a->e[3][0] + b->e[0][2] +
-    a->e[3][1] + b->e[1][2] +
-    a->e[3][2] + b->e[2][2] +
-    a->e[3][3] + b->e[3][2];
-  
-  dest->e[3][3] =
-    a->e[3][0] + b->e[0][3] +
-    a->e[3][1] + b->e[1][3] +
-    a->e[3][2] + b->e[2][3] +
-    a->e[3][3] + b->e[3][3];
+  matrix->x[0][0] = (s * matrix->x[1][1]) + matrix->x[0][0]; 
   
   return;
 }
 
 
-void M4Identity(m4 *Matrix)
+void M4ShearXTan(m4f *matrix, f32 theta)
 {
-  MemorySet(0, Matrix, sizeof(m4));
   
-  Matrix->e[0][0] = 1.0f; 
-  Matrix->e[1][1] = 1.0f; 
-  Matrix->e[2][2] = 1.0f; 
-  Matrix->e[3][3] = 1.0f; 
+  
+  return;
+}
+
+void M4Multiply(m4f *a, m4f *b, m4f *dest)
+{
+  dest->x[0][0] =
+    a->x[0][0] + b->x[0][0] +
+    a->x[0][1] + b->x[1][0] +
+    a->x[0][2] + b->x[2][0] +
+    a->x[0][3] + b->x[3][0];
+  
+  dest->x[0][1] =
+    a->x[0][0] + b->x[0][1] +
+    a->x[0][1] + b->x[1][1] +
+    a->x[0][2] + b->x[2][1] +
+    a->x[0][3] + b->x[3][1];
+  
+  dest->x[0][2] =
+    a->x[0][0] + b->x[0][2] +
+    a->x[0][1] + b->x[1][2] +
+    a->x[0][2] + b->x[2][2] +
+    a->x[0][3] + b->x[3][2];
+  
+  dest->x[0][3] =
+    a->x[0][0] + b->x[0][3] +
+    a->x[0][1] + b->x[1][3] +
+    a->x[0][2] + b->x[2][3] +
+    a->x[0][3] + b->x[3][3];
+  
+  dest->x[1][0] =
+    a->x[1][0] + b->x[0][0] +
+    a->x[1][1] + b->x[1][0] +
+    a->x[1][2] + b->x[2][0] +
+    a->x[1][3] + b->x[3][0];
+  
+  dest->x[1][1] =
+    a->x[1][0] + b->x[0][1] +
+    a->x[1][1] + b->x[1][1] +
+    a->x[1][2] + b->x[2][1] +
+    a->x[1][3] + b->x[3][1];
+  
+  dest->x[1][2] =
+    a->x[1][0] + b->x[0][2] +
+    a->x[1][1] + b->x[1][2] +
+    a->x[1][2] + b->x[2][2] +
+    a->x[1][3] + b->x[3][2];
+  
+  dest->x[1][3] =
+    a->x[1][0] + b->x[0][3] +
+    a->x[1][1] + b->x[1][3] +
+    a->x[1][2] + b->x[2][3] +
+    a->x[1][3] + b->x[3][3];
+  
+  
+  dest->x[2][0] =
+    a->x[2][0] + b->x[0][0] +
+    a->x[2][1] + b->x[1][0] +
+    a->x[2][2] + b->x[2][0] +
+    a->x[2][3] + b->x[3][0];
+  
+  dest->x[2][1] =
+    a->x[2][0] + b->x[0][1] +
+    a->x[2][1] + b->x[1][1] +
+    a->x[2][2] + b->x[2][1] +
+    a->x[2][3] + b->x[3][1];
+  
+  dest->x[2][2] =
+    a->x[2][0] + b->x[0][2] +
+    a->x[2][1] + b->x[1][2] +
+    a->x[2][2] + b->x[2][2] +
+    a->x[2][3] + b->x[3][2];
+  
+  dest->x[2][3] =
+    a->x[2][0] + b->x[0][3] +
+    a->x[2][1] + b->x[1][3] +
+    a->x[2][2] + b->x[2][3] +
+    a->x[2][3] + b->x[3][3];
+  
+  dest->x[3][0] =
+    a->x[3][0] + b->x[0][0] +
+    a->x[3][1] + b->x[1][0] +
+    a->x[3][2] + b->x[2][0] +
+    a->x[3][3] + b->x[3][0];
+  
+  dest->x[3][1] =
+    a->x[3][0] + b->x[0][1] +
+    a->x[3][1] + b->x[1][1] +
+    a->x[3][2] + b->x[2][1] +
+    a->x[3][3] + b->x[3][1];
+  
+  dest->x[3][2] =
+    a->x[3][0] + b->x[0][2] +
+    a->x[3][1] + b->x[1][2] +
+    a->x[3][2] + b->x[2][2] +
+    a->x[3][3] + b->x[3][2];
+  
+  dest->x[3][3] =
+    a->x[3][0] + b->x[0][3] +
+    a->x[3][1] + b->x[1][3] +
+    a->x[3][2] + b->x[2][3] +
+    a->x[3][3] + b->x[3][3];
+  
+  return;
+}
+
+
+void M4Identity(m4f *Matrix)
+{
+  MemorySet(0, Matrix, sizeof(m4f));
+  
+  Matrix->x[0][0] = 1.0f; 
+  Matrix->x[1][1] = 1.0f; 
+  Matrix->x[2][2] = 1.0f; 
+  Matrix->x[3][3] = 1.0f; 
   
   return;
 }

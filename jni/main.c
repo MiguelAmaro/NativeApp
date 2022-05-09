@@ -141,8 +141,8 @@ static int EngineInitDisplay(struct engine* Engine)
   glAttachShader(ShaderProgram, V);
   glAttachShader(ShaderProgram, F);
   
-  glBindAttribLocation(ShaderProgram, 0, "vPosition");
-  glBindAttribLocation(ShaderProgram, 1, "vColor");
+  glBindAttribLocation(ShaderProgram, 0, "APosition");
+  glBindAttribLocation(ShaderProgram, 1, "AColor");
   glLinkProgram(ShaderProgram);
   
   glDeleteShader(V);
@@ -201,6 +201,17 @@ static void EngineDrawFrame(struct engine* Engine)
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   
 #if 1
+  
+  m2f Projection = { 0 };
+  M2fIdentity(&Projection);
+  
+  m2f Rotate = { 0 };
+  M2fIdentity(&Rotate);
+  
+  m2f Scale = { 0 };
+  M2fScale(&Scale, V2f(1.5f, 1.5f));
+  M2fMultiply(&Rotate, &Scale, &Projection);
+  
   static struct ui Element =
   {
     {500.0f, 500.0f},
@@ -208,14 +219,24 @@ static void EngineDrawFrame(struct engine* Engine)
     {0.0f,0.0f},
   };
   
+#if 0
+  M4Identity(&Projection);
+  M4Scale   (&Projection, (V3){0.2f, 0.5f, 1.0f});
+  M4ShearX (&Projection, 0.0f);
+  
+  M4Ortho(&Projection,
+          0.0f,  GlobalRes.x,
+          GlobalRes.y,  0.0f,
+          0.0f, 1.0f);
+#endif
   
   b32 InRect = IsInRectHalfDim(Element.Pos, V2fScale(Element.Dim, 0.5f), GlobalTouchPos);
   LOG("%s | x: %f; y: %f", InRect?"true":"false", GlobalTouchPos.x, GlobalTouchPos.y);
   if(InRect) { Element.Pos = GlobalTouchPos; }
-  glUniform2fv(glGetUniformLocation(Engine->Shader, "UPos"), 1, Element.Pos.v);
-  glUniform2fv(glGetUniformLocation(Engine->Shader, "UDim"), 1, Element.Dim.v);
-  glUniform2fv(glGetUniformLocation(Engine->Shader, "URes"), 1, GlobalRes.v);
-#endif
+  glUniform2fv(glGetUniformLocation(Engine->Shader, "UPos"), 1, Element.Pos.c);
+  glUniform2fv(glGetUniformLocation(Engine->Shader, "UDim"), 1, Element.Dim.c);
+  glUniform2fv(glGetUniformLocation(Engine->Shader, "URes"), 1, GlobalRes.c);
+  glUniformMatrix2fv(glGetUniformLocation(Engine->Shader, "UProj"), 1, 0, Projection.v);
   glUseProgram(Engine->Shader);
   
   glBindBuffer(GL_ARRAY_BUFFER, Engine->Buffer);
@@ -225,6 +246,7 @@ static void EngineDrawFrame(struct engine* Engine)
   glEnableVertexAttribArray(1);
   
   glDrawArrays( GL_TRIANGLES, 0, 6);
+#endif
   
   eglSwapBuffers(Engine->Display, Engine->Surface);
   return;
@@ -232,7 +254,6 @@ static void EngineDrawFrame(struct engine* Engine)
 
 static void EngineTermDisplay(struct engine* Engine)
 {
-#if 1
   if (Engine->Display != EGL_NO_DISPLAY)
   {
     glDeleteProgram(Engine->Shader);
@@ -253,7 +274,6 @@ static void EngineTermDisplay(struct engine* Engine)
   Engine->Display = EGL_NO_DISPLAY;
   Engine->Context = EGL_NO_CONTEXT;
   Engine->Surface = EGL_NO_SURFACE;
-#endif
   return;
 }
 
@@ -273,7 +293,7 @@ static int32_t EngineHandleInput(struct android_app* App, AInputEvent* Event)
     GlobalTouchPos.y = AMotionEvent_getRawY(Event,
                                             PtrIndex);
     
-    LOG("input| x: %f, y: %f", GlobalTouchPos.x, GlobalTouchPos.y);
+    LOG("Input| x: %f, y: %f", GlobalTouchPos.x, GlobalTouchPos.y);
     switch(Action)
     {
       case AMOTION_EVENT_ACTION_POINTER_DOWN:

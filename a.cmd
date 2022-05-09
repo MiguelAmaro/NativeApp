@@ -44,6 +44,8 @@ call :launch || exit /b 1
 goto :eof
 
 :build
+echo If your getting consistent crashes make sure ndk-build doesn't have
+echo this cmdline option [-C %PROJECT_DIR%\jni]
 
 if not exist bin mkdir bin
 rem -C %PROJECT_DIR%\jni
