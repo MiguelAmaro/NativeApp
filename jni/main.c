@@ -24,9 +24,9 @@ struct engine
   GLuint Shader;
 };
 
-static int EngineInitDisplay(struct engine* engine)
+static int EngineInitDisplay(struct engine* Engine)
 {
-  const EGLint attribs[] =
+  const EGLint Attribs[] =
   {
     EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
     EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
@@ -36,52 +36,52 @@ static int EngineInitDisplay(struct engine* engine)
     EGL_NONE,
   };
   
-  EGLDisplay display;;
-  if ((display = eglGetDisplay(EGL_DEFAULT_DISPLAY)) == EGL_NO_DISPLAY)
+  EGLDisplay Display;
+  if ((Display = eglGetDisplay(EGL_DEFAULT_DISPLAY)) == EGL_NO_DISPLAY)
   {
     LOG("error with eglGetDisplay");
     return -1;
   }
   
-  if (!eglInitialize(display, 0, 0))
+  if (!eglInitialize(Display, 0, 0))
   {
     LOG("error with eglInitialize");
     return -1;
   }
   
-  EGLConfig config;
-  EGLint numConfigs;
-  if (!eglChooseConfig(display, attribs, &config, 1, &numConfigs))
+  EGLConfig Config;
+  EGLint NumConfigs;
+  if (!eglChooseConfig(Display, Attribs, &Config, 1, &NumConfigs))
   {
     LOG("error with eglChooseConfig");
     return -1;
   }
   
-  EGLint format;
-  if (!eglGetConfigAttrib(display, config, EGL_NATIVE_VISUAL_ID, &format))
+  EGLint Format;
+  if (!eglGetConfigAttrib(Display, Config, EGL_NATIVE_VISUAL_ID, &Format))
   {
     LOG("error with eglGetConfigAttrib");
     return -1;
   }
   
-  ANativeWindow_setBuffersGeometry(engine->App->window, 0, 0, format);
+  ANativeWindow_setBuffersGeometry(Engine->App->window, 0, 0, Format);
   
-  EGLSurface surface;
-  if (!(surface = eglCreateWindowSurface(display, config, engine->App->window, NULL)))
+  EGLSurface Surface;
+  if (!(Surface = eglCreateWindowSurface(Display, Config, Engine->App->window, NULL)))
   {
     LOG("error with eglCreateWindowSurface");
     return -1;
   }
   
-  const EGLint ctx_attrib[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
-  EGLContext context;
-  if (!(context = eglCreateContext(display, config, NULL, ctx_attrib)))
+  const EGLint CtxAttrib[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
+  EGLContext Context;
+  if (!(Context = eglCreateContext(Display, Config, NULL, CtxAttrib)))
   {
     LOG("error with eglCreateContext");
     return -1;
   }
   
-  if (eglMakeCurrent(display, surface, surface, context) == EGL_FALSE)
+  if (eglMakeCurrent(Display, Surface, Surface, Context) == EGL_FALSE)
   {
     LOG("error with eglMakeCurrent");
     return -1;
@@ -91,72 +91,72 @@ static int EngineInitDisplay(struct engine* engine)
   LOG("GL_RENDERER = %s", glGetString(GL_RENDERER));
   LOG("GL_VERSION = %s", glGetString(GL_VERSION));
   
-  EGLint w, h;
-  eglQuerySurface(display, surface, EGL_WIDTH, &w);
-  eglQuerySurface(display, surface, EGL_HEIGHT, &h);
+  EGLint Width, Height;
+  eglQuerySurface(Display, Surface, EGL_WIDTH, &Width);
+  eglQuerySurface(Display, Surface, EGL_HEIGHT, &Height);
   
-  engine->Display = display;
-  engine->Context = context;
-  engine->Surface = surface;
-  engine->Width = w;
-  engine->Height = h;
+  Engine->Display = Display;
+  Engine->Context = Context;
+  Engine->Surface = Surface;
+  Engine->Width = Width;
+  Engine->Height = Height;
   
-  AAsset* vasset = AAssetManager_open(engine->App->activity->assetManager, "vertex.glsl", AASSET_MODE_BUFFER);
-  if (!vasset)
+  AAsset* VAsset = AAssetManager_open(Engine->App->activity->assetManager, "vertex.glsl", AASSET_MODE_BUFFER);
+  if (!VAsset)
   {
     LOG("error opening vertex.glsl");
     return -1;
   }
-  const GLchar* vsrc = AAsset_getBuffer(vasset);
-  GLint vlen = AAsset_getLength(vasset);
+  const GLchar* VSrc = AAsset_getBuffer(VAsset);
+  GLint VLen = AAsset_getLength(VAsset);
   
-  GLuint v = glCreateShader(GL_VERTEX_SHADER);
-  glShaderSource(v, 1, &vsrc, &vlen);
-  glCompileShader(v);
+  GLuint V = glCreateShader(GL_VERTEX_SHADER);
+  glShaderSource(V, 1, &VSrc, &VLen);
+  glCompileShader(V);
   
-  AAsset_close(vasset);
+  AAsset_close(VAsset);
   
-  AAsset* fasset = AAssetManager_open(engine->App->activity->assetManager, "fragment.glsl", AASSET_MODE_BUFFER);
-  if (!fasset)
+  AAsset* FAsset = AAssetManager_open(Engine->App->activity->assetManager, "fragment.glsl", AASSET_MODE_BUFFER);
+  if (!FAsset)
   {
     LOG("error opening fragment.glsl");
     return -1;
   }
-  const GLchar* fsrc = AAsset_getBuffer(fasset);
-  GLint flen = AAsset_getLength(fasset);
+  const GLchar* FSrc = AAsset_getBuffer(FAsset);
+  GLint FLen = AAsset_getLength(FAsset);
   
-  GLuint f = glCreateShader(GL_FRAGMENT_SHADER);
-  glShaderSource(f, 1, &fsrc, &flen);
-  glCompileShader(f);
+  GLuint F = glCreateShader(GL_FRAGMENT_SHADER);
+  glShaderSource(F, 1, &FSrc, &FLen);
+  glCompileShader(F);
   
-  AAsset_close(fasset);
+  AAsset_close(FAsset);
   
-  GLuint p = glCreateProgram();
-  glAttachShader(p, v);
-  glAttachShader(p, f);
+  GLuint ShaderProgram = glCreateProgram();
+  glAttachShader(ShaderProgram, V);
+  glAttachShader(ShaderProgram, F);
   
-  glBindAttribLocation(p, 0, "vPosition");
-  glBindAttribLocation(p, 1, "vColor");
-  glLinkProgram(p);
+  glBindAttribLocation(ShaderProgram, 0, "vPosition");
+  glBindAttribLocation(ShaderProgram, 1, "vColor");
+  glLinkProgram(ShaderProgram);
   
-  glDeleteShader(v);
-  glDeleteShader(f);
-  glUseProgram(p);
+  glDeleteShader(V);
+  glDeleteShader(F);
+  glUseProgram(ShaderProgram);
   
-  const float buf[] =
+  const float TriData[] =
   {
     0.0f,  0.5f, 1.f, 0.f, 0.f,
     -0.5f, -0.5f, 0.f, 1.f, 0.f,
     0.5f, -0.5f, 0.f, 0.f, 1.f,
   };
   
-  GLuint b;
-  glGenBuffers(1, &b);
-  glBindBuffer(GL_ARRAY_BUFFER, b);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(buf), buf, GL_STATIC_DRAW);
+  GLuint VertBuffer;
+  glGenBuffers(1, &VertBuffer);
+  glBindBuffer(GL_ARRAY_BUFFER, VertBuffer);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(TriData), TriData, GL_STATIC_DRAW);
   
-  engine->Buffer = b;
-  engine->Shader = p;
+  Engine->Buffer = VertBuffer;
+  Engine->Shader = ShaderProgram;
   
   return 0;
 }
