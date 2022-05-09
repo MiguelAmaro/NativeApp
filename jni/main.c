@@ -24,7 +24,7 @@ struct engine
   GLuint Shader;
 };
 
-static int engine_init_display(struct engine* engine)
+static int EngineInitDisplay(struct engine* engine)
 {
   const EGLint attribs[] =
   {
@@ -221,7 +221,7 @@ static void EngineHandleCmd(struct android_app* app, int32_t cmd)
     case APP_CMD_INIT_WINDOW:
     if (engine->App->window != NULL)
     {
-      engine_init_display(engine);
+      EngineInitDisplay(engine);
       EngineDrawFrame(engine);
     }
     break;
