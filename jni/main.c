@@ -8,6 +8,7 @@
 #include <android_native_app_glue.h>
 
 #include "types.h"
+#include "math.h"
 
 #define LOG(...) ((void)__android_log_print(ANDROID_LOG_INFO, "NativeExample", __VA_ARGS__))
 
