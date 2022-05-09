@@ -13,3 +13,4 @@ Now you can use `a.cmd` to build, install and run the application:
       install   - only install .apk file on connected device
       launch    - ony run already installed .apk file
       log       - show logcat
+"# NativeApp" 
