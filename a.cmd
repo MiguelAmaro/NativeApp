@@ -1,6 +1,6 @@
 @echo off
 
-set APK=NativeExample.apk
+set APK=NativeApp.apk
 
 set PROJECT_DIR=%cd%
 
@@ -46,8 +46,8 @@ goto :eof
 :build
 
 if not exist bin mkdir bin
-
-call "%ANDROID_NDK%\ndk-build.cmd" -j4 NDK_LIBS_OUT=lib\lib -C %PROJECT_DIR%\jni || exit /b 1
+rem -C %PROJECT_DIR%\jni
+call "%ANDROID_NDK%\ndk-build.cmd" -j4 NDK_LIBS_OUT=lib\lib || exit /b 1
 
 "%ANDROID_SDK%\build-tools\%BUILD_TOOLS%\aapt.exe" package -f -M AndroidManifest.xml -I "%ANDROID_SDK%\platforms\%PLATFORM%\android.jar" -A assets -F bin\%APK%.build lib
 if ERRORLEVEL 1 exit /b 1

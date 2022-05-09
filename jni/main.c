@@ -10,7 +10,7 @@
 #include "types.h"
 #include "math.h"
 
-#define LOG(...) ((void)__android_log_print(ANDROID_LOG_INFO, "NativeExample", __VA_ARGS__))
+#define LOG(...) ((void)__android_log_print(ANDROID_LOG_INFO, "NativeApp", __VA_ARGS__))
 
 v2f GlobalRes      = {0};
 v2f GlobalTouchPos = {0};
@@ -149,17 +149,22 @@ static int EngineInitDisplay(struct engine* Engine)
   glDeleteShader(F);
   glUseProgram(ShaderProgram);
   
-  const float TriData[] =
+  const float QuadData[] =
   {
-    0.0f,  0.5f, 1.f, 0.f, 0.f,
-    -0.5f, -0.5f, 0.f, 1.f, 0.f,
-    0.5f, -0.5f, 0.f, 0.f, 1.f,
+    //Pos            Color
+    -1.0f,   1.0f,    1.f, 1.f, 0.f, 
+    1.0f ,  1.0f,    1.f, 0.f, 0.f,
+    1.0f , -1.0f,    0.f, 1.f, 0.f,
+    
+    -1.0f, -1.0f,    0.f, 0.f, 1.f,
+    1.0f , -1.0f,    0.f, 1.f, 0.f,
+    -1.0f,  1.0f,    1.f, 1.f, 0.f, 
   };
   
   GLuint VertBuffer;
   glGenBuffers(1, &VertBuffer);
   glBindBuffer(GL_ARRAY_BUFFER, VertBuffer);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(TriData), TriData, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(QuadData), QuadData, GL_STATIC_DRAW);
   
   Engine->Buffer = VertBuffer;
   Engine->Shader = ShaderProgram;
@@ -192,7 +197,7 @@ static void EngineDrawFrame(struct engine* Engine)
     return;
   }
   
-  glClearColor(0.258824f, 0.258824f, 0.435294f, 1);
+  glClearColor(0.0f, 0.0f, 0.0f, 1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   
 #if 1
@@ -219,7 +224,7 @@ static void EngineDrawFrame(struct engine* Engine)
   glEnableVertexAttribArray(0);
   glEnableVertexAttribArray(1);
   
-  glDrawArrays(GL_TRIANGLES, 0, 3);
+  glDrawArrays( GL_TRIANGLES, 0, 6);
   
   eglSwapBuffers(Engine->Display, Engine->Surface);
   return;
@@ -227,6 +232,7 @@ static void EngineDrawFrame(struct engine* Engine)
 
 static void EngineTermDisplay(struct engine* Engine)
 {
+#if 1
   if (Engine->Display != EGL_NO_DISPLAY)
   {
     glDeleteProgram(Engine->Shader);
@@ -247,6 +253,8 @@ static void EngineTermDisplay(struct engine* Engine)
   Engine->Display = EGL_NO_DISPLAY;
   Engine->Context = EGL_NO_CONTEXT;
   Engine->Surface = EGL_NO_SURFACE;
+#endif
+  return;
 }
 
 static int32_t EngineHandleInput(struct android_app* App, AInputEvent* Event)
@@ -319,7 +327,7 @@ static void EngineHandleCmd(struct android_app* App, int32_t Cmd)
 void android_main(struct android_app* State)
 {
   struct engine Engine;
-  memset(&Engine, 0, sizeof(Engine));
+  MemorySet(0, &Engine, sizeof(Engine));
   
   State->userData = &Engine;
   State->onAppCmd = EngineHandleCmd;

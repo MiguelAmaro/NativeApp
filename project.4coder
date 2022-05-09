@@ -4,58 +4,60 @@ project_name = "FitnessApp";
 
 patterns = 
 {
-    "*.c",
-    "*.h",
-    "*.bat",
-    "*.sh",
-    "*.4coder",
+  "*.c",
+  "*.h",
+  "*.bat",
+  "*.sh",
+  "*.4coder",
+  "*.glsl",
 };
 
 blacklist_patterns = 
 {
-    ".git",
-    ".build",
+  ".git",
+  ".build",
 };
 
 load_paths = {
-    .win = {
-        { .path =   ".", .recursive = false, .relative = true, },
-        { .path = "jni", .recursive = false, .relative = true, },
-    },
+  .win = {
+    { .path =   ".", .recursive = false, .relative = true, },
+    { .path = "jni", .recursive = false, .relative = true, },
+    { .path = "assets", .recursive = false, .relative = true, },
+  },
 };
 
 commands =
 {
-    .build =
-    {
-        .win              = "a.cmd build",
-        .out              = "*compilation*",
-        .footer_panel     = true,
-        .save_dirty_files = true,
-        .cursor_at_end    = false,
-    },
-    
-    .run =
-    {
-        .win              = "a.cmd run",
-        .footer_panel     = false,
-        .save_dirty_files = false,
-        .cursor_at_end    = false,
-    },
-    
-    .debug =
-    {
-        .win              = "a.cmd debug",
-        .footer_panel     = false,
-        .save_dirty_files = false,
-        .cursor_at_end    = false,
-    },
+  .build =
+  {
+    .win              = "a.cmd build",
+    .out              = "*compilation*",
+    .footer_panel     = true,
+    .save_dirty_files = true,
+    .cursor_at_end    = false,
+  },
+  
+  .run =
+  {
+    .win              = "a.cmd run",
+    .footer_panel     = false,
+    .save_dirty_files = false,
+    .cursor_at_end    = false,
+  },
+  
+  .debug =
+  {
+    .win              = "a.cmd debug",
+    .footer_panel     = false,
+    .save_dirty_files = false,
+    .cursor_at_end    = false,
+  },
 };
 
 fkey_command =
 {
-    .F1  = "build",
-    
-    .F12 = "run",
-    .F11 = "debug",
+  .F1  = "build",
+  
+  .F12 = "run",
+  .F11 = "debug",
 };

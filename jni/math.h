@@ -4,6 +4,13 @@
 
 #include "types.h"
 
+void MemorySet(u32 Value, void *Src, size_t Size)
+{
+  u8 *Memory = Src;
+  while(Size--) *Memory = Value;
+  return;
+}
+
 typedef union v2f v2f;
 union v2f
 {
@@ -142,7 +149,7 @@ void M2ShearXTan(m2 *dest, f32 theta)
 
 void M2Identity(m2 *dest)
 {
-  memset(dest, 0, sizeof(dest));
+  MemorySet(0, dest, sizeof(m2));
   
   dest->e[0][0] = 1.0f; 
   dest->e[1][1] = 1.0f; 
@@ -349,14 +356,14 @@ void M4Multiply(m4 *a, m4 *b, m4 *dest)
 }
 
 
-void M4Identity(m4 *matrix)
+void M4Identity(m4 *Matrix)
 {
-  memset(matrix, 0, sizeof(matrix));
+  MemorySet(0, Matrix, sizeof(m4));
   
-  matrix->e[0][0] = 1.0f; 
-  matrix->e[1][1] = 1.0f; 
-  matrix->e[2][2] = 1.0f; 
-  matrix->e[3][3] = 1.0f; 
+  Matrix->e[0][0] = 1.0f; 
+  Matrix->e[1][1] = 1.0f; 
+  Matrix->e[2][2] = 1.0f; 
+  Matrix->e[3][3] = 1.0f; 
   
   return;
 }
