@@ -4,8 +4,8 @@
 
 #include "types.h"
 
-typedef union v2 v2;
-union v2
+typedef union v2f v2f;
+union v2f
 {
   struct
   {
@@ -15,8 +15,8 @@ union v2
   f32 v[2];
 };
 
-typedef union v3 v3;
-union v3
+typedef union v3f v3f;
+union v3f
 {
   struct
   {
@@ -24,7 +24,7 @@ union v3
     f32 y;
     f32 z;
   };
-  f32 v[3];
+  f32 e[3];
 };
 
 typedef union m2 m2;
@@ -48,8 +48,27 @@ union m4
   f32 e[4][4];
 };
 
-//~ 2x2 MATRIX FUCNTIONS
-void M2Scale(m2 *matrix, v2 scalars)
+
+//~ VECTOR 2 FUNCTIONS
+v2f V2f(f32 x, f32 y)
+{
+  v2f Result = {0};
+  Result.x = x;
+  Result.y = y;
+  return Result;
+}
+
+v2f V2fScale(v2f a, f32 Scalar)
+{
+  v2f Result = {0};
+  Result.x = a.x*Scalar;
+  Result.y = a.y*Scalar;
+  return Result;
+}
+
+
+//~ 2x2 MATRIX FUNCTIONS
+void M2Scale(m2 *matrix, v2f scalars)
 {
   m2 *scale = matrix;
   
@@ -201,7 +220,7 @@ void M4Translate(m4 *matrix,
   return;
 }
 
-void M4Scale(m4 *matrix, v3 scalars)
+void M4Scale(m4 *matrix, v3f scalars)
 {
   matrix->e[0][0] *= scalars.x; 
   matrix->e[1][1] *= scalars.y; 

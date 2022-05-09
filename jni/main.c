@@ -12,8 +12,8 @@
 
 #define LOG(...) ((void)__android_log_print(ANDROID_LOG_INFO, "NativeExample", __VA_ARGS__))
 
-v2 GlobalRes      = {0};
-v2 GlobalTouchPos = {0};
+v2f GlobalRes      = {0};
+v2f GlobalTouchPos = {0};
 
 struct engine
 {
@@ -167,6 +167,24 @@ static int EngineInitDisplay(struct engine* Engine)
   return 0;
 }
 
+#if 1
+struct ui
+{
+  v2f Pos;
+  v2f Dim;
+  v2f Vel;
+};
+
+b32 IsInRectHalfDim(v2f Pos, v2f HalfDim, v2f Touch)
+{
+  v2f Min = { Pos.x - HalfDim.x, Pos.y - HalfDim.y};
+  v2f Max = { Pos.x + HalfDim.x, Pos.y + HalfDim.y};
+  return ((Touch.x >= Min.x) && (Touch.y >= Min.y) && 
+          (Touch.x <  Max.x) && (Touch.y <  Max.y));
+}
+#endif
+
+
 static void EngineDrawFrame(struct engine* Engine)
 {
   if (Engine->Display == NULL)
@@ -177,6 +195,22 @@ static void EngineDrawFrame(struct engine* Engine)
   glClearColor(0.258824f, 0.258824f, 0.435294f, 1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   
+#if 0
+  static ui Element =
+  {
+    {500.0f, 500.0f},
+    {200.0f, 200.0f},
+    {0.0f,0.0f},
+  };
+  
+  
+  b32 InRect = IsInRectHalfDim(Element.Pos, V2Scale(Element.Dim, 0.5f), GlobalTouchPos);
+  LOG("%s | x: %f; y: %f", InRect?"true":"false", GlobalTouchPos.x, GlobalTouchPos.y);
+  if(InRect) { Element.Pos = GlobalTouchPos; }
+  glUniform2fv(glGetUniformLocation(Engine->Shader, "UPos"), 1, Element.Pos.v);
+  glUniform2fv(glGetUniformLocation(Engine->Shader, "UDim"), 1, Element.Dim.v);
+  glUniform2fv(glGetUniformLocation(Engine->Shader, "URes"), 1, GlobalRes.v);
+#endif
   glUseProgram(Engine->Shader);
   
   glBindBuffer(GL_ARRAY_BUFFER, Engine->Buffer);
