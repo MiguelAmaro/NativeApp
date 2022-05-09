@@ -12,6 +12,9 @@
 
 #define LOG(...) ((void)__android_log_print(ANDROID_LOG_INFO, "NativeExample", __VA_ARGS__))
 
+v2 GlobalRes      = {0};
+v2 GlobalTouchPos = {0};
+
 struct engine
 {
   struct android_app* App;
@@ -277,6 +280,8 @@ void android_main(struct android_app* State)
     
     if (Engine.Active)
     {
+      GlobalRes.x = Engine.Width;
+      GlobalRes.y = Engine.Height;
       EngineDrawFrame(&Engine);
     }
   }
