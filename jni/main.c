@@ -161,9 +161,9 @@ static int EngineInitDisplay(struct engine* Engine)
   return 0;
 }
 
-static void EngineDrawFrame(struct engine* engine)
+static void EngineDrawFrame(struct engine* Engine)
 {
-  if (engine->Display == NULL)
+  if (Engine->Display == NULL)
   {
     return;
   }
@@ -171,9 +171,9 @@ static void EngineDrawFrame(struct engine* engine)
   glClearColor(0.258824f, 0.258824f, 0.435294f, 1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   
-  glUseProgram(engine->Shader);
+  glUseProgram(Engine->Shader);
   
-  glBindBuffer(GL_ARRAY_BUFFER, engine->Buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, Engine->Buffer);
   glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, (2+3)*sizeof(float), NULL);
   glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, (2+3)*sizeof(float), (void*)(2*sizeof(float)));
   glEnableVertexAttribArray(0);
@@ -181,62 +181,63 @@ static void EngineDrawFrame(struct engine* engine)
   
   glDrawArrays(GL_TRIANGLES, 0, 3);
   
-  eglSwapBuffers(engine->Display, engine->Surface);
+  eglSwapBuffers(Engine->Display, Engine->Surface);
+  return;
 }
 
-static void EngineTermDisplay(struct engine* engine)
+static void EngineTermDisplay(struct engine* Engine)
 {
-  if (engine->Display != EGL_NO_DISPLAY)
+  if (Engine->Display != EGL_NO_DISPLAY)
   {
-    glDeleteProgram(engine->Shader);
-    glDeleteBuffers(1, &engine->Buffer);
+    glDeleteProgram(Engine->Shader);
+    glDeleteBuffers(1, &Engine->Buffer);
     
-    eglMakeCurrent(engine->Display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-    if (engine->Context != EGL_NO_CONTEXT)
+    eglMakeCurrent(Engine->Display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    if (Engine->Context != EGL_NO_CONTEXT)
     {
-      eglDestroyContext(engine->Display, engine->Context);
+      eglDestroyContext(Engine->Display, Engine->Context);
     }
-    if (engine->Surface != EGL_NO_SURFACE)
+    if (Engine->Surface != EGL_NO_SURFACE)
     {
-      eglDestroySurface(engine->Display, engine->Surface);
+      eglDestroySurface(Engine->Display, Engine->Surface);
     }
-    eglTerminate(engine->Display);
+    eglTerminate(Engine->Display);
   }
-  engine->Active = 0;
-  engine->Display = EGL_NO_DISPLAY;
-  engine->Context = EGL_NO_CONTEXT;
-  engine->Surface = EGL_NO_SURFACE;
+  Engine->Active = 0;
+  Engine->Display = EGL_NO_DISPLAY;
+  Engine->Context = EGL_NO_CONTEXT;
+  Engine->Surface = EGL_NO_SURFACE;
 }
 
-static int32_t EngineHandleInput(struct android_app* app, AInputEvent* event)
+static int32_t EngineHandleInput(struct android_app* App, AInputEvent* Event)
 {
   return 0;
 }
 
-static void EngineHandleCmd(struct android_app* app, int32_t cmd)
+static void EngineHandleCmd(struct android_app* App, int32_t Cmd)
 {
-  struct engine* engine = (struct engine*)app->userData;
-  switch (cmd)
+  struct engine* Engine = (struct engine*)App->userData;
+  switch (Cmd)
   {
     case APP_CMD_INIT_WINDOW:
-    if (engine->App->window != NULL)
+    if (Engine->App->window != NULL)
     {
-      EngineInitDisplay(engine);
-      EngineDrawFrame(engine);
+      EngineInitDisplay(Engine);
+      EngineDrawFrame(Engine);
     }
     break;
     
     case APP_CMD_TERM_WINDOW:
-    EngineTermDisplay(engine);
+    EngineTermDisplay(Engine);
     break;
     
     case APP_CMD_GAINED_FOCUS:
-    engine->Active = 1;
+    Engine->Active = 1;
     break;
     
     case APP_CMD_LOST_FOCUS:
-    engine->Active = 0;
-    EngineDrawFrame(engine);
+    Engine->Active = 0;
+    EngineDrawFrame(Engine);
     break;
   }
 }
