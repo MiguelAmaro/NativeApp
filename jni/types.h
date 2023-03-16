@@ -1,5 +1,3 @@
-/* date = May 8th 2022 11:14 pm */
-
 #ifndef TYPES_H
 #define TYPES_H
 
@@ -7,10 +5,11 @@
 
 #define NULLPTR ((void *)0x00UL)
 
-
-typedef float f32;
+typedef int32_t  s32;
 typedef uint8_t   u8;
 typedef uint32_t u32;
 typedef uint32_t b32;
+typedef float    f32;
+typedef double   f64;
 
 #endif //TYPES_H

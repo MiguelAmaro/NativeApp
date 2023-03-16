@@ -1,10 +1,13 @@
 //...
 
 precision mediump float;
-varying vec3 Color;
+uniform vec2  UWinRes;
+varying vec4 Color;
 
 void main()
 {
-  //gl_FragColor = vec4(vec3(0.0, 1.0, 0.4), 1.0);
-  gl_FragColor = vec4(Color, 1.0);
+  vec2 st = (2.0f*gl_FragCoord.xy-UWinRes.xy)/UWinRes.y;
+  float Circle = smoothstep(0.0f,0.01f, length(st)-0.2);
+  vec3 OutColor = Color.xyz+Circle*vec3(1.0f,0.2f,0.7f);
+  gl_FragColor = vec4(OutColor, Color.w);
 }
