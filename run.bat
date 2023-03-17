@@ -1,1 +1,1 @@
-a remove & a install & a launch
+a run

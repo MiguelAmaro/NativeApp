@@ -3,18 +3,23 @@
 
 attribute vec2 APosition;
 attribute vec3 AColor;
-varying vec4 Color;
+attribute vec4 AUIRect;
+attribute vec4 AUIColor;
 
-uniform float URect[4];
+varying vec4 Color;
+varying vec2 UV;
+
+#define UI_ELEMENT_MAX_COUNT (64)
 uniform vec2  UWinRes;
-uniform vec4  UColor;
+//uniform float URect [4*UI_ELEMENT_MAX_COUNT];
+//uniform vec4  UColor[1*UI_ELEMENT_MAX_COUNT];
 
 void main()
 {
-  Color = UColor;
-  //gl_VetexID;
-  vec2 Min = vec2(URect[0], URect[1]);
-  vec2 Max = vec2(URect[2], URect[3]);
+  Color = vec4(AColor,1.0)*0.0+AUIColor*1.0;
+  UV = APosition; //position is counting as uv also
+  vec2 Min = vec2(AUIRect[0], AUIRect[1]);
+  vec2 Max = vec2(AUIRect[2], AUIRect[3]);
   vec2 HalfDim   = vec2((Max.x-Min.x)*0.5f,
                         (Max.y-Min.y)*0.5f);
   

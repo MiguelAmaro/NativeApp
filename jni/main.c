@@ -1,9 +1,14 @@
 #include <jni.h>
 
+#include <assert.h>
+#include <string.h>
 #include <android/log.h>
 #include <android/asset_manager.h>
 #include <android_native_app_glue.h>
 
+#define LOG(...) ((void)__android_log_print(ANDROID_LOG_INFO, "NativeApp", __VA_ARGS__))
+#define SymbolToString(symbol) #symbol
+#define ThisFuncionAsString() __FUNCTION__
 #include "types.h"
 #include "mymath.h"
 #include "ui.h"
@@ -11,24 +16,29 @@
 //Global Input
 v2f GlobalRes      = {0};
 v2f GlobalTouchPos = {0};
+v2f GlobalTouchDelta = {0};
 b32 GlobalIsPressed = 0;
-
+b32 GlobalJustPressed = 0;
+b32 GlobalJustReleased = 0;
+ui_state GlobalUIState = {0};
 //Global Input
+#define ELMPUSH_BTN_ELM_ID (0)
+#define ELMPOP_BTN_ELM_ID (1)
+
 #include "gfx.h"
 #include "render.h"
 
-#define LOG(...) ((void)__android_log_print(ANDROID_LOG_INFO, "NativeApp", __VA_ARGS__))
 
-const float QuadData[] =
+vertex QuadData[6] =
 {
-  //Pos            Color
-  -1.0f,   1.0f,    1.f, 1.f, 0.f, 
-  1.0f ,  1.0f,    1.f, 0.f, 0.f,
-  1.0f , -1.0f,    0.f, 1.f, 0.f,
-  
-  -1.0f, -1.0f,    0.f, 0.f, 1.f,
-  1.0f , -1.0f,    0.f, 1.f, 0.f,
-  -1.0f,  1.0f,    1.f, 1.f, 0.f, 
+  //tri:a//Pos            Color
+  {{-1.0f,  1.0f},    {1.f, 1.f, 0.f,} },
+  {{1.0f ,  1.0f},    {1.f, 0.f, 0.f,} },
+  {{1.0f , -1.0f},    {0.f, 1.f, 0.f,} },
+  //tri:b
+  {{-1.0f, -1.0f},    {0.f, 0.f, 1.f,} },
+  {{1.0f , -1.0f},    {0.f, 1.f, 0.f,} },
+  {{-1.0f,  1.0f},    {1.f, 1.f, 0.f,} },
 };
 #include "engine.h"
 
@@ -48,7 +58,7 @@ void android_main(struct android_app* State)
     int Ident;
     int Events;
     struct android_poll_source* Source;
-    LOG("hello world");
+    
     while ((Ident=ALooper_pollAll(Engine.Active ? 0 : -1, NULL, &Events, (void**)&Source)) >= 0)
     {
       if (Source != NULL)

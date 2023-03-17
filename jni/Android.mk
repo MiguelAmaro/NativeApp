@@ -12,10 +12,10 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := main
 LOCAL_SRC_FILES := main.c 
 LOCAL_C_INCLUDES := ${LOCAL_PATH}/cglm/include
-LOCAL_CFLAGS := -fdiagnostics-absolute-paths -g
+LOCAL_CFLAGS := -fdiagnostics-absolute-paths
 #LOCAL_CPPFLAGS
 #LOCAL_LDFLAGS
-LOCAL_LDLIBS := -llog -landroid -lEGL -lGLESv2
+LOCAL_LDLIBS := -llog -landroid -lEGL -lGLESv3
 LOCAL_STATIC_LIBRARIES := android_native_app_glue
 #LOCAL_SHARED_LIBRARIES
 #LOCAL_ARM_MODE := arm

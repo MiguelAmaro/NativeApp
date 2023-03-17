@@ -232,9 +232,9 @@ void M4Identity(m4f *Matrix)
   return;
 }
 
-r2f R2f(v2f min, v2f max)
+r2f R2f(f32 minx, f32 miny, f32 maxx, f32 maxy)
 {
-  r2f Result = {min, max};
+  r2f Result = {minx, miny, maxx, maxy};
   return Result;
 }
 #endif //MATH_H

@@ -112,15 +112,25 @@ static int EngineInitDisplay(struct engine* Engine)
   
   
   gfx_ctx GfxCtx = GfxCtxInit();
-  GfxCtx.VBufferId = GfxVertexBufferCreate(QuadData, sizeof(QuadData), 1);
-  GfxCtx.IBufferId = GfxInstanceBufferCreate(NULL, sizeof(r2f), 64);
+  //changing the order doesnt affect anything
+  GfxCtx.VBufferId = GfxVertexBufferCreate(QuadData, sizeof(vertex), 6);
+  GfxCtx.IBufferId = GfxInstanceBufferCreate(NULL, sizeof(r2f)+sizeof(v4f), UI_STACKS_MAX_COUNT);
   GfxCtx.ShaderId  = GfxShaderProgramCreate(VertShaderSrc, VertShaderSrcLength,
                                             FragShaderSrc, FragShaderSrcLength);
+  GfxCtx.LayoutId  = GfxVertexLayoutCreate(&GfxCtx);
   
   AAsset_close(VAsset);
   AAsset_close(FAsset);
   glUseProgram(GfxCtx.ShaderId);
   Engine->GfxCtx = GfxCtx;
+  
+  UIStateInit(&GlobalUIState);
+  UIStateElementPush(&GlobalUIState, 
+                     UIElementInit(R2f(0.0f, 0.0f, 200.0f, 200.0f),
+                                   V4f(0.0f, 1.0f, 1.0f, 1.0f), ELMPUSH_BTN_ELM_ID));
+  UIStateElementPush(&GlobalUIState,
+                     UIElementInit(R2f(200.0f, 0.0f, 400.0f, 200.0f),
+                                   V4f(1.0f, 0.0f, 0.0f, 1.0f), ELMPOP_BTN_ELM_ID));
   
   return 0;
 }
@@ -131,46 +141,70 @@ static void EngineDrawFrame(struct engine* Engine)
     return;
   }
   
-  glClearColor(0.0f, 0.0f, 0.0f, 1);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  
-#if 1
-  
+  GfxClearScreen();
+  static u32 IdGenerator = 2; //is just a counter
+  u32 TouchedCount = 0;
   m2f Projection = M2fIdentity();
   m2f Rotate     = M2fIdentity();
   m2f Scale      = M2fScale(1.5f, 1.5f);
   M2fMultiply(&Rotate, &Scale, &Projection);
-  
-  static ui Element = {
-    .Rect = { 0.0f, 0.0f, 1080.0f, 1080.0f },
-    .IsSelected = 0,
-    .Color = {0.3f, 0.2f, 0.8f, 1.0f},
-  };
-  Element.IsSelected = IsInRect(Element.Rect, GlobalTouchPos)?1:0;
-  //LOG("%s | x: %f; y: %f", InRect?"true":"false", GlobalTouchPos.x, GlobalTouchPos.y);
-  
-  if(Element.IsSelected)
+  for(ui_elm *Current = GlobalUIState.Elements;
+      ElementIsBeforeLastPushed(&GlobalUIState, Current); Current++)
   {
-    v2f HalfDim = V2f((Element.Rect.max.x-Element.Rect.min.x)*0.5f,
-                      (Element.Rect.max.y-Element.Rect.min.y)*0.5f);
-    Element.Rect.min.x = GlobalTouchPos.x-HalfDim.x;
-    Element.Rect.min.y = GlobalTouchPos.y-HalfDim.y;
-    Element.Rect.max.x = GlobalTouchPos.x+HalfDim.x;
-    Element.Rect.max.y = GlobalTouchPos.y+HalfDim.y;
-    Element.Color = V4f(1.0f, 1.0f, 1.0f, 0.4f);
-    if(GlobalIsPressed)
+    ui_elm *Element = Current;
+    b32 IsTouched = IsInRect(Element->Rect, GlobalTouchPos)?1:0;
+    //LOG("%s | x: %f; y: %f", InRect?"true":"false", GlobalTouchPos.x, GlobalTouchPos.y);
+    TouchedCount += IsTouched?1:0;
+    if(IsTouched && ElementIsSelected(&GlobalUIState, Element))
     {
-      Element.Color = V4f(0.3f, 1.0f, 0.8f, 1.0f);
+      v2f HalfDim = V2f((Element->Rect.max.x-Element->Rect.min.x)*0.5f,
+                        (Element->Rect.max.y-Element->Rect.min.y)*0.5f);
+      
+      Element->Rect.min.x += GlobalTouchDelta.x;
+      Element->Rect.min.y += GlobalTouchDelta.y;
+      Element->Rect.max.x += GlobalTouchDelta.x;
+      Element->Rect.max.y += GlobalTouchDelta.y;
+      
+      if(GlobalIsPressed)
+      {
+        Element->Color = V4f(1.0f, 1.0f, 0.0f, 1.0f);
+      }
+      if(GlobalJustPressed && Element->Id==ELMPUSH_BTN_ELM_ID)
+      {
+        if(!ElementStorageFull(&GlobalUIState))
+        {
+          u32 Id = IdGenerator++;
+          u32 Offset = fmod(100*Id, GlobalRes.x);
+          UIStateElementPush(&GlobalUIState,
+                             UIElementInit(R2f(0.0f+Offset, 0.0f+Offset, 600.0f+Offset, 600.0f+Offset),
+                                           V4f(1.0f, 0.0f, 0.0f, 1.0f), Id));
+        }
+      }
+      if(GlobalJustPressed && Element->Id==ELMPOP_BTN_ELM_ID)
+      {
+        if(ElementStorageCount(&GlobalUIState) > 2)
+        {
+          UIStateElementPop(&GlobalUIState);
+          IdGenerator--;
+        }
+      }
     }
-  } else
+    if(IsTouched && ElementNoneSelected(&GlobalUIState))
+    {
+      ElementSelect(&GlobalUIState, Element);
+    }
+  }
+  if(TouchedCount==0)
   {
-    Element.Color = V4f(0.3f, 0.2f, 0.8f, 1.0f);
+    GlobalUIState.SelectedId = UI_NULL_ELEMENT_ID;
   }
   
-  GfxCtxDraw(&Engine->GfxCtx, Element);
-#endif
+  GfxCtxDrawInstanced(&Engine->GfxCtx,
+                      GlobalUIState.Elements, 
+                      GlobalUIState.ElementCount);
   
   eglSwapBuffers(Engine->Display, Engine->Surface);
+  
   return;
 }
 static void EngineTermDisplay(struct engine* Engine)
@@ -207,23 +241,23 @@ static int32_t EngineHandleInput(struct android_app* App, AInputEvent* Event)
     u32 Action   = AMotionEvent_getAction(Event);
     u32 PtrIndex = ((Action >>  AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT));
     
-    
-    GlobalTouchPos.x = AMotionEvent_getRawX(Event,
-                                            PtrIndex);
-    
-    GlobalTouchPos.y = AMotionEvent_getRawY(Event,
-                                            PtrIndex);
+    GlobalTouchPos.x = AMotionEvent_getRawX(Event,PtrIndex);
+    GlobalTouchPos.y = AMotionEvent_getRawY(Event,PtrIndex);
+    GlobalTouchDelta.x = GlobalTouchPos.x-AMotionEvent_getHistoricalX(Event, PtrIndex, 1);
+    GlobalTouchDelta.y = GlobalTouchPos.y-AMotionEvent_getHistoricalY(Event, PtrIndex, 1);
     
     LOG("Input| x: %f, y: %f", GlobalTouchPos.x, GlobalTouchPos.y);
     switch(Action)
     {
       case AMOTION_EVENT_ACTION_POINTER_DOWN:
       {
-        GlobalTouchPos.x = AMotionEvent_getRawX(Event, PtrIndex);
-        GlobalTouchPos.y = AMotionEvent_getRawY(Event, PtrIndex);
+        //GlobalTouchPos.x = AMotionEvent_getRawX(Event, PtrIndex);
+        //GlobalTouchPos.y = AMotionEvent_getRawY(Event, PtrIndex);
+        
       } break;
       case AMOTION_EVENT_ACTION_DOWN:
       {
+        GlobalJustPressed = 1;
         GlobalIsPressed = 1;
       } break;
       case AMOTION_EVENT_ACTION_UP:
