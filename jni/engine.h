@@ -140,7 +140,6 @@ static void EngineDrawFrame(struct engine* Engine)
   {
     return;
   }
-  
   GfxClearScreen();
   static u32 IdGenerator = 2; //is just a counter
   u32 TouchedCount = 0;
@@ -160,11 +159,18 @@ static void EngineDrawFrame(struct engine* Engine)
       v2f HalfDim = V2f((Element->Rect.max.x-Element->Rect.min.x)*0.5f,
                         (Element->Rect.max.y-Element->Rect.min.y)*0.5f);
       
+#if 0
       Element->Rect.min.x += GlobalTouchDelta.x;
       Element->Rect.min.y += GlobalTouchDelta.y;
       Element->Rect.max.x += GlobalTouchDelta.x;
       Element->Rect.max.y += GlobalTouchDelta.y;
+#else
+      Element->Rect.min.x = GlobalTouchPos.x-HalfDim.x;
+      Element->Rect.min.y = GlobalTouchPos.y-HalfDim.y;
+      Element->Rect.max.x = GlobalTouchPos.x+HalfDim.x;
+      Element->Rect.max.y = GlobalTouchPos.y+HalfDim.y;
       
+#endif
       if(GlobalIsPressed)
       {
         Element->Color = V4f(1.0f, 1.0f, 0.0f, 1.0f);
@@ -243,8 +249,8 @@ static int32_t EngineHandleInput(struct android_app* App, AInputEvent* Event)
     
     GlobalTouchPos.x = AMotionEvent_getRawX(Event,PtrIndex);
     GlobalTouchPos.y = AMotionEvent_getRawY(Event,PtrIndex);
-    GlobalTouchDelta.x = GlobalTouchPos.x-AMotionEvent_getHistoricalX(Event, PtrIndex, 1);
-    GlobalTouchDelta.y = GlobalTouchPos.y-AMotionEvent_getHistoricalY(Event, PtrIndex, 1);
+    //GlobalTouchDelta.x = GlobalTouchPos.x-AMotionEvent_getHistoricalX(Event, PtrIndex, 1);
+    //GlobalTouchDelta.y = GlobalTouchPos.y-AMotionEvent_getHistoricalY(Event, PtrIndex, 1);
     
     LOG("Input| x: %f, y: %f", GlobalTouchPos.x, GlobalTouchPos.y);
     switch(Action)
@@ -257,7 +263,7 @@ static int32_t EngineHandleInput(struct android_app* App, AInputEvent* Event)
       } break;
       case AMOTION_EVENT_ACTION_DOWN:
       {
-        GlobalJustPressed = 1;
+        GlobalJustPressed = GlobalIsPressed?0:1;
         GlobalIsPressed = 1;
       } break;
       case AMOTION_EVENT_ACTION_UP:

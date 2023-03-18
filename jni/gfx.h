@@ -148,7 +148,7 @@ void GfxCtxDrawInstanced(gfx_ctx *Ctx, ui_elm *Element, u32 Count)
   glBindVertexArray(Ctx->LayoutId);
   //post draw effects
   glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_SRC_ALPHA);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
   glDrawArraysInstanced(GL_TRIANGLES, 0, 6, Count);
   return;
 }
@@ -231,10 +231,10 @@ u32 GfxVertexLayoutCreate(gfx_ctx *Ctx)
   glVertexAttribBinding(3, 3);
   glVertexAttribDivisor(3, 1);
   //vbind
-  glBindVertexBuffer(0, Ctx->VBufferId, a, sizeof(v3f));
-  glBindVertexBuffer(1, Ctx->VBufferId, b, sizeof(v2f));
-  glBindVertexBuffer(2, Ctx->IBufferId, c, sizeof(v4f));
-  glBindVertexBuffer(3, Ctx->IBufferId, d, sizeof(v4f));
+  glBindVertexBuffer(0, Ctx->VBufferId, 0, VStride);
+  glBindVertexBuffer(1, Ctx->VBufferId, 0, VStride);
+  glBindVertexBuffer(2, Ctx->IBufferId, 0, IStride);
+  glBindVertexBuffer(3, Ctx->IBufferId, 0, IStride);
   glBindVertexArray(0);
   
   GLPrintLastError(ThisFuncionAsString(), "why is attribformat failing? ");
@@ -242,7 +242,7 @@ u32 GfxVertexLayoutCreate(gfx_ctx *Ctx)
 }
 void GfxClearScreen(void)
 {
-  glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+  glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   return;
 }

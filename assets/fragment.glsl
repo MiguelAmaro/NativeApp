@@ -1,4 +1,3 @@
-//...
 
 precision mediump float;
 uniform vec2  UWinRes;
@@ -21,6 +20,6 @@ void main()
   float Circle = smoothstep(0.0f,0.01f, length(UV)-0.5);
   
   vec2 Box = SdBox(UV, 0.8f, 0.01);
-  vec3 OutColor = Color.xyz+Box.y*vec3(1.0f,0.2f,0.7f);
-  gl_FragColor = vec4(OutColor, Box.x);
+  vec3 OutColor = Color.xyz*Box.x+Box.y*vec3(1.0f,0.2f,0.7f);
+  gl_FragColor = vec4(OutColor, Box.x*0.2+Box.y);
 }

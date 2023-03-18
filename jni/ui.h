@@ -9,7 +9,7 @@ struct ui_elm
   r2f Rect;
   v4f Color;
 };
-#define UI_STACKS_MAX_COUNT (64)
+#define UI_STACKS_MAX_COUNT (256)
 typedef struct ui_stacks ui_stacks;
 struct ui_stacks
 {

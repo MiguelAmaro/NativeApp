@@ -58,7 +58,7 @@ void android_main(struct android_app* State)
     int Ident;
     int Events;
     struct android_poll_source* Source;
-    
+    GlobalJustPressed = 0; // NOTE(MIGUEL): sketchy impl
     while ((Ident=ALooper_pollAll(Engine.Active ? 0 : -1, NULL, &Events, (void**)&Source)) >= 0)
     {
       if (Source != NULL)

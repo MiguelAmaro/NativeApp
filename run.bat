@@ -1,1 +1,1 @@
-a run
+a.cmd
