@@ -153,6 +153,40 @@
   Element->Rect.max.x = GlobalTouchPos.x+HalfDim.x;
   Element->Rect.max.y = GlobalTouchPos.y+HalfDim.y;
   
+#if 0
+  Element->Rect.min.x += GlobalTouchDelta.x;
+  Element->Rect.min.y += GlobalTouchDelta.y;
+  Element->Rect.max.x += GlobalTouchDelta.x;
+  Element->Rect.max.y += GlobalTouchDelta.y;
+#else
+#endif
+  
+#if 0
+  LOG("z bot id: %u\n"
+      "z top id: %u\n", 
+      GlobalUIState.ZList.BotId, GlobalUIState.ZList.TopId);
+  ui_elm *Current = UIElementGetById(GlobalUIState.ZList.BotId);
+  UIAttribs[ElementIdx].Rect  = Current->Rect;
+  UIAttribs[ElementIdx].Color = Current->Color;
+  ElementIdx++;
+  LOG("current element:\n"
+      "id: %d\n"
+      "next id: %d\n", 
+      Current->Id, Current->IdNext);
+  Current = UIElementGetById(Current->IdNext);
+  UIAttribs[ElementIdx].Rect  = Current->Rect;
+  UIAttribs[ElementIdx].Color = Current->Color;
+  ElementIdx++;
+  LOG("next element:\n"
+      "id: %u\n"
+      "next id: %u\n", 
+      Current->Id, Current->IdNext);
+  LOG("last elm's next id is null?: %s\n", (U32Max==Current->IdNext)?"yes":"no");
+  Current = UIElementGetById(Current->IdNext);
+  LOG("after top elm null?: %s\n", (Current==NULL)?"yes":"no");
+  Current = UIElementGetById(GlobalUIState.ZList.BotId);
+#endif
+  //LOG("%s | x: %f; y: %f", InRect?"true":"false", GlobalTouchPos.x, GlobalTouchPos.y);
   //oddly enough taking the no instance draw call path keep both buffers bounded correctly
   GfxCtxDraw(&Engine->GfxCtx, GlobalUIState.Elements[0]);
 }

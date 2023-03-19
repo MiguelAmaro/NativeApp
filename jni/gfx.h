@@ -120,14 +120,16 @@ void GfxCtxDrawInstanced(gfx_ctx *Ctx, ui_elm *Element, u32 Count)
 {
   struct ui_attribs {r2f Rect; v4f Color;};
   struct ui_attribs UIAttribs [UI_ELEMENT_MAX_COUNT] = {0};
+  
+#if 1
   u32 ElementIdx = 0;
-  for(ui_elm *Current = GlobalUIState.Elements;
-      ElementIsBeforeLastPushed(&GlobalUIState, Current); Current++)
+  for(ui_elm *Current = Element; Current!=NULL; Current = Current->Next)
   {
     UIAttribs[ElementIdx].Rect  = Current->Rect;
     UIAttribs[ElementIdx].Color = Current->Color;
     ElementIdx++;
   }
+#endif
   //map data to inst buffer
   glBindBuffer(GL_ARRAY_BUFFER, Ctx->IBufferId);
   struct ui_attribs *GLIBuffer = glMapBufferRange(GL_ARRAY_BUFFER, 0,
@@ -232,9 +234,9 @@ u32 GfxVertexLayoutCreate(gfx_ctx *Ctx)
   glVertexAttribDivisor(3, 1);
   //vbind
   glBindVertexBuffer(0, Ctx->VBufferId, 0, VStride);
-  glBindVertexBuffer(1, Ctx->VBufferId, 0, VStride);
+  glBindVertexBuffer(1, Ctx->VBufferId, b, VStride);
   glBindVertexBuffer(2, Ctx->IBufferId, 0, IStride);
-  glBindVertexBuffer(3, Ctx->IBufferId, 0, IStride);
+  glBindVertexBuffer(3, Ctx->IBufferId, d, IStride);
   glBindVertexArray(0);
   
   GLPrintLastError(ThisFuncionAsString(), "why is attribformat failing? ");

@@ -131,16 +131,13 @@ static int EngineInitDisplay(struct engine* Engine)
   UIStateElementPush(&GlobalUIState,
                      UIElementInit(R2f(200.0f, 0.0f, 400.0f, 200.0f),
                                    V4f(1.0f, 0.0f, 0.0f, 1.0f), ELMPOP_BTN_ELM_ID));
-  
   return 0;
 }
-static void EngineDrawFrame(struct engine* Engine)
+static void EngineUpdate(struct engine* Engine)
 {
-  if (Engine->Display == NULL)
-  {
-    return;
-  }
-  GfxClearScreen();
+  // TODO(MIGUEL): make it so that element doesnt move on initial selection
+  // TODO(MIGUEL): make elm hierarchies
+  // TODO(MIGUEL): use attrib stacks
   static u32 IdGenerator = 2; //is just a counter
   u32 TouchedCount = 0;
   m2f Projection = M2fIdentity();
@@ -152,37 +149,25 @@ static void EngineDrawFrame(struct engine* Engine)
   {
     ui_elm *Element = Current;
     b32 IsTouched = IsInRect(Element->Rect, GlobalTouchPos)?1:0;
-    //LOG("%s | x: %f; y: %f", InRect?"true":"false", GlobalTouchPos.x, GlobalTouchPos.y);
+    
     TouchedCount += IsTouched?1:0;
+    
+    Element->Color = ((Element->Id==ELMPUSH_BTN_ELM_ID)?V4f(0.0f, 0.8f, 0.8f, 0.8f):
+                      (Element->Id==ELMPOP_BTN_ELM_ID )?V4f(0.8f, 0.0f, 0.0f, 0.8f):
+                      V4f(0.08f, 0.08f, 0.08f, 0.8f));
+    
     if(IsTouched && ElementIsSelected(&GlobalUIState, Element))
     {
-      v2f HalfDim = V2f((Element->Rect.max.x-Element->Rect.min.x)*0.5f,
-                        (Element->Rect.max.y-Element->Rect.min.y)*0.5f);
-      
-#if 0
-      Element->Rect.min.x += GlobalTouchDelta.x;
-      Element->Rect.min.y += GlobalTouchDelta.y;
-      Element->Rect.max.x += GlobalTouchDelta.x;
-      Element->Rect.max.y += GlobalTouchDelta.y;
-#else
-      Element->Rect.min.x = GlobalTouchPos.x-HalfDim.x;
-      Element->Rect.min.y = GlobalTouchPos.y-HalfDim.y;
-      Element->Rect.max.x = GlobalTouchPos.x+HalfDim.x;
-      Element->Rect.max.y = GlobalTouchPos.y+HalfDim.y;
-      
-#endif
-      if(GlobalIsPressed)
-      {
-        Element->Color = V4f(1.0f, 1.0f, 0.0f, 1.0f);
-      }
+      UIStateZListPutElementAtTop(&GlobalUIState, Element);
       if(GlobalJustPressed && Element->Id==ELMPUSH_BTN_ELM_ID)
       {
         if(!ElementStorageFull(&GlobalUIState))
         {
           u32 Id = IdGenerator++;
-          u32 Offset = fmod(100*Id, GlobalRes.x);
+          u32 Offset = fmod(100*Id, GlobalRes.y);
           UIStateElementPush(&GlobalUIState,
-                             UIElementInit(R2f(0.0f+Offset, 0.0f+Offset, 600.0f+Offset, 600.0f+Offset),
+                             UIElementInit(R2f(0.0f       , 000.0f+(Id-2)*100.0f,
+                                               GlobalRes.x*0.5f, 100.0f+(Id-2)*100.0f),
                                            V4f(1.0f, 0.0f, 0.0f, 1.0f), Id));
         }
       }
@@ -195,18 +180,52 @@ static void EngineDrawFrame(struct engine* Engine)
         }
       }
     }
-    if(IsTouched && ElementNoneSelected(&GlobalUIState))
+    if(IsTouched && GlobalIsPressed)
+    {
+      Element->Color = ((Element->Id==ELMPUSH_BTN_ELM_ID)?V4f(0.0f, 1.0f, 1.0f, 1.0f):
+                        (Element->Id==ELMPOP_BTN_ELM_ID )?V4f(1.0f, 0.0f, 0.0f, 1.0f):
+                        V4f(0.2f, 0.2f, 0.2f, 1.0f));
+    }
+    if(ElementIsSelected(&GlobalUIState, Element) && !GlobalIsPressed)
+    {
+      Element->Color = V4f(1.0f, 1.0f, 1.0f, 0.4f);
+    }
+    if(ElementIsSelected(&GlobalUIState, Element))
+    {
+      if(!GlobalJustPressed && GlobalIsPressed)
+      {
+        v2f HalfDim = V2f((Element->Rect.max.x-Element->Rect.min.x)*0.5f,
+                          (Element->Rect.max.y-Element->Rect.min.y)*0.5f);
+        
+        Element->Rect.min.x = GlobalTouchPos.x-HalfDim.x;
+        Element->Rect.min.y = GlobalTouchPos.y-HalfDim.y;
+        Element->Rect.max.x = GlobalTouchPos.x+HalfDim.x;
+        Element->Rect.max.y = GlobalTouchPos.y+HalfDim.y;
+      }
+    }
+    if(GlobalJustPressed && IsTouched && 
+       (ElementNoneSelected(&GlobalUIState) || !ElementIsSelected(&GlobalUIState, Element)))
     {
       ElementSelect(&GlobalUIState, Element);
     }
   }
-  if(TouchedCount==0)
+  
+  if(TouchedCount==0 && GlobalJustPressed.)
   {
     GlobalUIState.SelectedId = UI_NULL_ELEMENT_ID;
   }
+  return;
+}
+static void EngineDrawFrame(struct engine* Engine)
+{
+  if (Engine->Display == NULL)
+  {
+    return;
+  }
+  GfxClearScreen();
   
   GfxCtxDrawInstanced(&Engine->GfxCtx,
-                      GlobalUIState.Elements, 
+                      GlobalUIState.ZList.Bottom,
                       GlobalUIState.ElementCount);
   
   eglSwapBuffers(Engine->Display, Engine->Surface);

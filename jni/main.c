@@ -7,6 +7,12 @@
 #include <android_native_app_glue.h>
 
 #define LOG(...) ((void)__android_log_print(ANDROID_LOG_INFO, "NativeApp", __VA_ARGS__))
+#define Assert(condition, ...) \
+do { \
+if(!(condition)) \
+{ ((void)__android_log_print(ANDROID_LOG_WARN, "NativeApp[ASSERT]!", __VA_ARGS__)); } \
+} while(0)
+
 #define SymbolToString(symbol) #symbol
 #define ThisFuncionAsString() __FUNCTION__
 #include "types.h"
@@ -20,7 +26,7 @@ v2f GlobalTouchDelta = {0};
 b32 GlobalIsPressed = 0;
 b32 GlobalJustPressed = 0;
 b32 GlobalJustReleased = 0;
-ui_state GlobalUIState = {0};
+
 //Global Input
 #define ELMPUSH_BTN_ELM_ID (0)
 #define ELMPOP_BTN_ELM_ID (1)
@@ -76,6 +82,7 @@ void android_main(struct android_app* State)
     {
       GlobalRes.x = Engine.Width;
       GlobalRes.y = Engine.Height;
+      EngineUpdate(&Engine);
       EngineDrawFrame(&Engine);
     }
   }
