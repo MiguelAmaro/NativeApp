@@ -1,9 +1,10 @@
 #ifndef DRAW_H
 #define DRAW_H
 
-#define DRAW_BUCKET_MAX_COUNT UI_ELEMENT_MAX_COUNT
+#define DRAW_BUCKET_MAX_COUNT (256)
+// TODO(MIGUEL): add border thickness, roundness, border color
 typedef struct quad_attribs quad_attribs;
-struct quad_attribs 
+struct quad_attribs
 {r2f Rect; v4f Color;};
 typedef struct draw_bucket draw_bucket;
 struct draw_bucket
@@ -22,6 +23,10 @@ void DrawBucketEnd(draw_bucket *Bucket)
 {
   // NOTE(MIGUEL): push bucket to some storage for later for gfx rendering code
 }
+void DrawBucketPushText(draw_bucket *Bucket)
+{
+  return;
+}
 void DrawBucketPushUIElements(draw_bucket *Bucket, ui_elm *Elements, u32 Count)
 {
   if(!(Bucket->Count<DRAW_BUCKET_MAX_COUNT)) return;
@@ -30,6 +35,7 @@ void DrawBucketPushUIElements(draw_bucket *Bucket, ui_elm *Elements, u32 Count)
     quad_attribs *Attribs = &Bucket->QuadAttribs[Bucket->Count++];
     Attribs->Rect  = Current->Rect;
     Attribs->Color = Current->Color;
+    //DrawBucketPushText(draw_bucket *Bucket, Elements.Text);
   }
   return;
 }

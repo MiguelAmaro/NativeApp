@@ -5,7 +5,12 @@
 //   - pointers
 //   - id (indexes atm)
 //   - hashed keys(not impl)
-
+typedef enum ui_elm_flags ui_elm_flags;
+enum ui_elm_flags
+{
+  UI_Flag_None       = (0<<0),
+  UI_Flag_Selectable = (1<<0),
+};
 #define UI_NULL_ELEMENT_ID (U32Max)
 typedef struct ui_elm ui_elm;
 struct ui_elm
@@ -13,6 +18,7 @@ struct ui_elm
   u32 Id;
   r2f Rect;
   v4f Color;
+  ui_elm_flags Flags;
   //z list: draw order
   ui_elm *Next;
   ui_elm *Prev;
@@ -20,7 +26,7 @@ struct ui_elm
   //hierarcy
   //...
 };
-#define UI_STACKS_MAX_COUNT (256)
+#define UI_STACKS_MAX_COUNT (64)
 typedef struct ui_stacks ui_stacks;
 struct ui_stacks
 {
@@ -33,7 +39,7 @@ struct ui_zlist
   ui_elm *Top;
   ui_elm *Bottom;
 };
-#define UI_ELEMENT_MAX_COUNT (64)
+#define UI_ELEMENT_MAX_COUNT (256)
 typedef struct ui_state ui_state;
 struct ui_state
 {
@@ -184,7 +190,7 @@ void UIStateElementPop(ui_state *State)
   State->NextSlot--;
   return;
 }
-ui_elm UIElementInit(r2f Rect, v4f Color, u32 Id)
+ui_elm UIElementInit(r2f Rect, v4f Color, u32 Id, ui_elm_flags Flags)
 {
   // NOTE(MIGUEL): assisgned id could point to somethind out side the table
   assert(Id<UI_ELEMENT_MAX_COUNT);
@@ -192,6 +198,7 @@ ui_elm UIElementInit(r2f Rect, v4f Color, u32 Id)
   ui_elm Element = { 
     .Rect = Rect, 
     .Color = Color,
+    .Flags = Flags,
     .Id = Id,
     .Next = NULL,
     .Prev = NULL,

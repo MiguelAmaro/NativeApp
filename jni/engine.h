@@ -90,7 +90,8 @@ static int EngineInitDisplay(struct engine* Engine)
   Engine->Surface = Surface;
   Engine->Width = Width;
   Engine->Height = Height;
-  
+  GlobalRes.x = Engine->Width;
+  GlobalRes.y = Engine->Height;
   
   AAsset* VAsset = AAssetManager_open(Engine->App->activity->assetManager, "vertex.glsl", AASSET_MODE_BUFFER);
   AAsset* FAsset = AAssetManager_open(Engine->App->activity->assetManager, "fragment.glsl", AASSET_MODE_BUFFER);
@@ -110,11 +111,10 @@ static int EngineInitDisplay(struct engine* Engine)
   s32         VertShaderSrcLength = AAsset_getLength(VAsset);
   s32         FragShaderSrcLength = AAsset_getLength(FAsset);
   
-  
   gfx_ctx GfxCtx = GfxCtxInit();
   //changing the order doesnt affect anything
   GfxCtx.VBufferId = GfxVertexBufferCreate(QuadData, sizeof(vertex), 6);
-  GfxCtx.IBufferId = GfxInstanceBufferCreate(NULL, sizeof(r2f)+sizeof(v4f), UI_STACKS_MAX_COUNT);
+  GfxCtx.IBufferId = GfxInstanceBufferCreate(NULL, sizeof(quad_attribs), DRAW_BUCKET_MAX_COUNT);
   GfxCtx.ShaderId  = GfxShaderProgramCreate(VertShaderSrc, VertShaderSrcLength,
                                             FragShaderSrc, FragShaderSrcLength);
   GfxCtx.LayoutId  = GfxVertexLayoutCreate(&GfxCtx);
@@ -126,11 +126,14 @@ static int EngineInitDisplay(struct engine* Engine)
   
   UIStateInit(&GlobalUIState);
   UIStateElementPush(&GlobalUIState, 
-                     UIElementInit(R2f(0.0f, 0.0f, 200.0f, 200.0f),
-                                   V4f(0.0f, 1.0f, 1.0f, 1.0f), ELMPUSH_BTN_ELM_ID));
+                     UIElementInit(R2f(40.0f, GlobalRes.y-980.0f, (40.0f)+200.0f, (GlobalRes.y-980.0f)+200.0f),
+                                   V4f(0.0f, 1.0f, 1.0f, 1.0f), ELMPUSH_BTN_ELM_ID, UI_Flag_Selectable));
   UIStateElementPush(&GlobalUIState,
-                     UIElementInit(R2f(200.0f, 0.0f, 400.0f, 200.0f),
-                                   V4f(1.0f, 0.0f, 0.0f, 1.0f), ELMPOP_BTN_ELM_ID));
+                     UIElementInit(R2f(40.0f+200.0f, GlobalRes.y-980.0f, (40.0f)+200.0f+200.0f, (GlobalRes.y-980.0f)+200.0f),
+                                   V4f(1.0f, 0.0f, 0.0f, 1.0f), ELMPOP_BTN_ELM_ID, UI_Flag_Selectable));
+  UIStateElementPush(&GlobalUIState,
+                     UIElementInit(R2f(40.0f, 40.0f, GlobalRes.x-40.0f, GlobalRes.y-1000.0f),
+                                   V4f(1.0f, 0.0f, 0.0f, 1.0f), GlobalUIState.ElementCount+1, UI_Flag_None));
   return 0;
 }
 static void EngineUpdate(struct engine* Engine)
@@ -140,7 +143,11 @@ static void EngineUpdate(struct engine* Engine)
   // TODO(MIGUEL): use attrib stacks
   
   //- ui logic begin 
-  static u32 IdGenerator = 2; //is just a counter
+  // NOTE(MIGUEL): system user input/event/response data should be captured and stored in the ui state struct
+  //               using a UIBegin() call
+  // NOTE(MIGUEL): this using a stack based approach to elm creation for simplicity rather than a hash based approach
+  //               which is the more flexible one.
+  u32 IdGenerator = GlobalUIState.ElementCount; //is just a counter
   u32 TouchedCount = 0;
   m2f Projection = M2fIdentity();
   m2f Rotate     = M2fIdentity();
@@ -150,68 +157,33 @@ static void EngineUpdate(struct engine* Engine)
   for(ui_elm *Current = GlobalUIState.Elements;
       ElementIsBeforeLastPushed(&GlobalUIState, Current); Current++)
   {
-    ui_elm *Element = Current;
-    b32 IsTouched = IsInRect(Element->Rect, GlobalTouchPos)?1:0;
-    
-    TouchedCount += IsTouched?1:0;
-    
-    Element->Color = ((Element->Id==ELMPUSH_BTN_ELM_ID)?V4f(0.0f, 0.8f, 0.8f, 0.8f):
-                      (Element->Id==ELMPOP_BTN_ELM_ID )?V4f(0.8f, 0.0f, 0.0f, 0.8f):
-                      V4f(0.08f, 0.08f, 0.08f, 0.8f));
-    
-    if(IsTouched && ElementIsSelected(&GlobalUIState, Element))
+    ui_elm    *Element = Current;
+    ui_user_sig Signal = UIDoButton(Element);
+    if(Signal.IsTouched && Signal.IsSelected)
     {
-      UIStateZListPutElementAtTop(&GlobalUIState, Element);
-      if(GlobalJustPressed && Element->Id==ELMPUSH_BTN_ELM_ID)
+      if(Signal.JustPressed && Element->Id==ELMPUSH_BTN_ELM_ID)
       {
-        if(!ElementStorageFull(&GlobalUIState))
-        {
-          u32 Id = IdGenerator++;
-          u32 Offset = fmod(100*Id, GlobalRes.y);
-          UIStateElementPush(&GlobalUIState,
-                             UIElementInit(R2f(0.0f       , 000.0f+(Id-2)*100.0f,
-                                               GlobalRes.x*0.5f, 100.0f+(Id-2)*100.0f),
-                                           V4f(1.0f, 0.0f, 0.0f, 1.0f), Id));
-        }
+        u32 Id = IdGenerator++;
+        u32 OffsetY = fmod((Id-3)*100.0f, GlobalRes.y);
+        u32 OffsetX = floorf((Id-3)*100.0f/GlobalRes.x)*4.0f;
+        ui_elm ElementToPush = UIElementInit(R2f(0.0f+OffsetX            , 000.0f+OffsetY,
+                                                 GlobalRes.x*0.5f+OffsetX, 100.0f+OffsetY),
+                                             V4f(1.0f, 0.0f, 0.0f, 1.0f), Id, UI_Flag_Selectable);
+        UIStateElementPush(&GlobalUIState, ElementToPush);
       }
-      if(GlobalJustPressed && Element->Id==ELMPOP_BTN_ELM_ID)
+      if(Signal.JustPressed && Element->Id==ELMPOP_BTN_ELM_ID)
       {
-        if(ElementStorageCount(&GlobalUIState) > 2)
+        if(ElementStorageCount(&GlobalUIState) > 3)
         {
           UIStateElementPop(&GlobalUIState);
           IdGenerator--;
         }
       }
     }
-    if(IsTouched && GlobalIsPressed)
-    {
-      Element->Color = ((Element->Id==ELMPUSH_BTN_ELM_ID)?V4f(0.0f, 1.0f, 1.0f, 1.0f):
-                        (Element->Id==ELMPOP_BTN_ELM_ID )?V4f(1.0f, 0.0f, 0.0f, 1.0f):
-                        V4f(0.2f, 0.2f, 0.2f, 1.0f));
-    }
-    if(ElementIsSelected(&GlobalUIState, Element) && !GlobalIsPressed)
-    {
-      Element->Color = V4f(1.0f, 1.0f, 1.0f, 0.4f);
-    }
-    if(ElementIsSelected(&GlobalUIState, Element))
-    {
-      if(!GlobalJustPressed && GlobalIsPressed)
-      {
-        v2f HalfDim = V2f((Element->Rect.max.x-Element->Rect.min.x)*0.5f,
-                          (Element->Rect.max.y-Element->Rect.min.y)*0.5f);
-        
-        Element->Rect.min.x = GlobalTouchPos.x-HalfDim.x;
-        Element->Rect.min.y = GlobalTouchPos.y-HalfDim.y;
-        Element->Rect.max.x = GlobalTouchPos.x+HalfDim.x;
-        Element->Rect.max.y = GlobalTouchPos.y+HalfDim.y;
-      }
-    }
-    if(GlobalJustPressed && IsTouched && 
-       (ElementNoneSelected(&GlobalUIState) || !ElementIsSelected(&GlobalUIState, Element)))
-    {
-      ElementSelect(&GlobalUIState, Element);
-    }
+    TouchedCount += Signal.IsTouched;
   }
+  // NOTE(MIGUEL): v this type of code that relies on post processe info doen on all ui elm should be 
+  //                 in a UIEnd() function.
   if(TouchedCount==0 && GlobalJustPressed)
   {
     GlobalUIState.SelectedId = UI_NULL_ELEMENT_ID;
