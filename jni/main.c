@@ -31,6 +31,7 @@ b32 GlobalJustReleased = 0;
 #define ELMPUSH_BTN_ELM_ID (0)
 #define ELMPOP_BTN_ELM_ID (1)
 
+#include "draw.h"
 #include "gfx.h"
 #include "render.h"
 

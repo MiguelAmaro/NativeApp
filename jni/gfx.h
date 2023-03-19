@@ -5,9 +5,11 @@
 #include <GLES3/gl31.h>
 
 // NOTE(MIGUEL): Canonical Vertex.. for now
+//-TYPES
 typedef struct vertex vertex;
 struct vertex
 { v2f Pos; v3f Color; };
+//-TYPES
 
 typedef struct gfx_ctx gfx_ctx;
 struct gfx_ctx
@@ -116,29 +118,17 @@ void GfxCtxDraw(gfx_ctx *Ctx, ui_elm Element)
   glDrawArrays(GL_TRIANGLES, 0, 6);
   return;
 }
-void GfxCtxDrawInstanced(gfx_ctx *Ctx, ui_elm *Element, u32 Count)
+void GfxCtxDrawBucketInstanced(gfx_ctx *Ctx, draw_bucket *Bucket)
 {
-  struct ui_attribs {r2f Rect; v4f Color;};
-  struct ui_attribs UIAttribs [UI_ELEMENT_MAX_COUNT] = {0};
-  
-#if 1
-  u32 ElementIdx = 0;
-  for(ui_elm *Current = Element; Current!=NULL; Current = Current->Next)
-  {
-    UIAttribs[ElementIdx].Rect  = Current->Rect;
-    UIAttribs[ElementIdx].Color = Current->Color;
-    ElementIdx++;
-  }
-#endif
   //map data to inst buffer
   glBindBuffer(GL_ARRAY_BUFFER, Ctx->IBufferId);
   struct ui_attribs *GLIBuffer = glMapBufferRange(GL_ARRAY_BUFFER, 0,
-                                                  Count*sizeof(struct ui_attribs),
+                                                  Bucket->Count*sizeof(quad_attribs),
                                                   GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
   if(GLIBuffer)
   {
     LOG("poiner exists!!!!");
-    memcpy(GLIBuffer, UIAttribs, Count*sizeof(struct ui_attribs));
+    memcpy(GLIBuffer, Bucket->QuadAttribs, Bucket->Count*sizeof(quad_attribs));
   }else
   {
     GLPrintLastError(ThisFuncionAsString(), "buffer mapping");
@@ -151,13 +141,13 @@ void GfxCtxDrawInstanced(gfx_ctx *Ctx, ui_elm *Element, u32 Count)
   //post draw effects
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
-  glDrawArraysInstanced(GL_TRIANGLES, 0, 6, Count);
+  glDrawArraysInstanced(GL_TRIANGLES, 0, 6, Bucket->Count);
   return;
 }
 u32 GfxShaderProgramCreate(const char *VertShaderSrc, s32 VertShaderSrcLength,
                            const char *FragShaderSrc, s32 FragShaderSrcLength)
 {
-  //Vert Compilation
+  //Vert Compilationd
   GLuint VertShader = glCreateShader(GL_VERTEX_SHADER);
   glShaderSource(VertShader, 1, (const GLchar **)&VertShaderSrc, &VertShaderSrcLength);
   glCompileShader(VertShader);
@@ -199,11 +189,9 @@ u32 GfxInstanceBufferCreate(void *Data, u32 Size, u32 Count)
 u32 GfxVertexLayoutCreate(gfx_ctx *Ctx)
 {
   u32 LayoutId = 0;
-  //local types
-  struct ui_attribs {r2f Rect; v4f Color;};
   //strides
   u32 VStride = sizeof(vertex);
-  u32 IStride = sizeof(struct ui_attribs);
+  u32 IStride = sizeof(quad_attribs);
   //vertex buffer
   glGenVertexArrays(1, &LayoutId);
   glBindVertexArray(LayoutId);
@@ -214,8 +202,8 @@ u32 GfxVertexLayoutCreate(gfx_ctx *Ctx)
   glEnableVertexAttribArray(3);
   u32 a = offsetof(vertex, Pos);
   u32 b = offsetof(vertex, Color);
-  u32 c = offsetof(struct ui_attribs, Rect);
-  u32 d = offsetof(struct ui_attribs, Color);
+  u32 c = offsetof(quad_attribs, Rect);
+  u32 d = offsetof(quad_attribs, Color);
   //pos
   glVertexAttribFormat (0, 2, GL_FLOAT, GL_FALSE, a); 
   glVertexAttribBinding(0, 0);
@@ -238,13 +226,11 @@ u32 GfxVertexLayoutCreate(gfx_ctx *Ctx)
   glBindVertexBuffer(2, Ctx->IBufferId, 0, IStride);
   glBindVertexBuffer(3, Ctx->IBufferId, d, IStride);
   glBindVertexArray(0);
-  
-  GLPrintLastError(ThisFuncionAsString(), "why is attribformat failing? ");
   return LayoutId;
 }
-void GfxClearScreen(void)
+void GfxClearScreen(f32 r, f32 g, f32 b, f32 a)
 {
-  glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
+  glClearColor(r,g,b,a);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   return;
 }

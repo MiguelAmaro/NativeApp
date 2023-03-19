@@ -1,7 +1,6 @@
 #ifndef ENGINE_H
 #define ENGINE_H
 
-
 struct engine
 {
   struct android_app* App;
@@ -13,6 +12,7 @@ struct engine
   int32_t Width;
   int32_t Height;
   gfx_ctx GfxCtx;
+  draw_bucket Bucket;
 };
 static int EngineInitDisplay(struct engine* Engine)
 {
@@ -138,12 +138,15 @@ static void EngineUpdate(struct engine* Engine)
   // TODO(MIGUEL): make it so that element doesnt move on initial selection
   // TODO(MIGUEL): make elm hierarchies
   // TODO(MIGUEL): use attrib stacks
+  
+  //- ui logic begin 
   static u32 IdGenerator = 2; //is just a counter
   u32 TouchedCount = 0;
   m2f Projection = M2fIdentity();
   m2f Rotate     = M2fIdentity();
   m2f Scale      = M2fScale(1.5f, 1.5f);
   M2fMultiply(&Rotate, &Scale, &Projection);
+  
   for(ui_elm *Current = GlobalUIState.Elements;
       ElementIsBeforeLastPushed(&GlobalUIState, Current); Current++)
   {
@@ -209,25 +212,26 @@ static void EngineUpdate(struct engine* Engine)
       ElementSelect(&GlobalUIState, Element);
     }
   }
-  
-  if(TouchedCount==0 && GlobalJustPressed.)
+  if(TouchedCount==0 && GlobalJustPressed)
   {
     GlobalUIState.SelectedId = UI_NULL_ELEMENT_ID;
   }
+  //- ui logic end
+  
+  DrawBucketBegin(&Engine->Bucket);
+  DrawBucketPushUIElements(&Engine->Bucket,
+                           GlobalUIState.ZList.Bottom,
+                           GlobalUIState.ElementCount);
+  DrawBucketEnd(&Engine->Bucket); //does nothing for now. look at stub def comment for my impl idea
   return;
 }
 static void EngineDrawFrame(struct engine* Engine)
 {
-  if (Engine->Display == NULL)
-  {
-    return;
-  }
-  GfxClearScreen();
+  if (Engine->Display == NULL) { return; }
   
-  GfxCtxDrawInstanced(&Engine->GfxCtx,
-                      GlobalUIState.ZList.Bottom,
-                      GlobalUIState.ElementCount);
+  GfxClearScreen(0.1f, 0.1f, 0.12f, 1.0f);
   
+  GfxCtxDrawBucketInstanced(&Engine->GfxCtx, &Engine->Bucket);
   eglSwapBuffers(Engine->Display, Engine->Surface);
   
   return;
@@ -256,7 +260,6 @@ static void EngineTermDisplay(struct engine* Engine)
   Engine->Surface = EGL_NO_SURFACE;
   return;
 }
-
 static int32_t EngineHandleInput(struct android_app* App, AInputEvent* Event)
 {
   // NOTE(MIGUEL): do i even need to take input in this function?????
@@ -265,9 +268,9 @@ static int32_t EngineHandleInput(struct android_app* App, AInputEvent* Event)
   {
     u32 Action   = AMotionEvent_getAction(Event);
     u32 PtrIndex = ((Action >>  AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT));
-    
-    GlobalTouchPos.x = AMotionEvent_getRawX(Event,PtrIndex);
-    GlobalTouchPos.y = AMotionEvent_getRawY(Event,PtrIndex);
+    //touch pos taking into account offset from stuff like nav bar
+    GlobalTouchPos.x = AMotionEvent_getRawX(Event,PtrIndex) + AMotionEvent_getXOffset(Event);
+    GlobalTouchPos.y = AMotionEvent_getRawY(Event,PtrIndex) + AMotionEvent_getYOffset(Event);
     //GlobalTouchDelta.x = GlobalTouchPos.x-AMotionEvent_getHistoricalX(Event, PtrIndex, 1);
     //GlobalTouchDelta.y = GlobalTouchPos.y-AMotionEvent_getHistoricalY(Event, PtrIndex, 1);
     

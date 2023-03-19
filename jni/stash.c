@@ -189,5 +189,12 @@
   //LOG("%s | x: %f; y: %f", InRect?"true":"false", GlobalTouchPos.x, GlobalTouchPos.y);
   //oddly enough taking the no instance draw call path keep both buffers bounded correctly
   GfxCtxDraw(&Engine->GfxCtx, GlobalUIState.Elements[0]);
+  
+  // Bucket = BeginDrawBucket();
+  //Wont use this function at first. only one bucket, fixed size. predefined. just to get started.
+  //let the engine have a bucket and pass that in to draw ui elements
+  // DrawUIElements(Bucket, Elements)
+  // EndDrawBucket();
+  // BucketPush(Engine, GfxCtx, Bucket)
 }
 

@@ -16,6 +16,9 @@ struct ui_elm
   //z list: draw order
   ui_elm *Next;
   ui_elm *Prev;
+  //u32 *Text;
+  //hierarcy
+  //...
 };
 #define UI_STACKS_MAX_COUNT (256)
 typedef struct ui_stacks ui_stacks;
@@ -39,18 +42,18 @@ struct ui_state
   ui_elm *OnePastLastSlot;
   u32 ElementCount;
   u32 SelectedId;
-  //draw oreder not stack dependent
+  //draw order not stack dependent
   ui_zlist ZList;
 };
 ui_state GlobalUIState = {0};
 inline b32 ElementIsBeforeLastPushed(ui_state *State, ui_elm *elm_ptr) {return (elm_ptr < State->NextSlot);}
-inline b32 ElementStorageEmpty(ui_state *State) {return (State->NextSlot == State->Elements);}
-inline b32 ElementStorageFull (ui_state *State) {return (State->NextSlot == State->OnePastLastSlot);}
-inline u32 ElementStorageCount (ui_state *State) {return (State->ElementCount);}
-inline u32 ElementIsSelected (ui_state *State, ui_elm *Element) {return (State->SelectedId == Element->Id);}
-inline u32 ElementNoneSelected (ui_state *State)                {return (State->SelectedId == UI_NULL_ELEMENT_ID);}
-inline u32 ElementSelect      (ui_state *State, ui_elm *Element) {return (State->SelectedId = Element->Id);}
-inline u32 ElementIsNull      (ui_elm *Element)                {return (Element->Id == UI_NULL_ELEMENT_ID);}
+inline b32 ElementStorageEmpty      (ui_state *State) {return (State->NextSlot == State->Elements);}
+inline b32 ElementStorageFull       (ui_state *State) {return (State->NextSlot == State->OnePastLastSlot);}
+inline u32 ElementStorageCount      (ui_state *State) {return (State->ElementCount);}
+inline u32 ElementIsSelected        (ui_state *State, ui_elm *Element) {return (State->SelectedId == Element->Id);}
+inline u32 ElementNoneSelected      (ui_state *State)                  {return (State->SelectedId == UI_NULL_ELEMENT_ID);}
+inline u32 ElementSelect            (ui_state *State, ui_elm *Element) {return (State->SelectedId = Element->Id);}
+inline u32 ElementIsNull            (ui_elm *Element)                  {return (Element->Id == UI_NULL_ELEMENT_ID);}
 #include "ui_logs.h"
 
 void UIStateInit(ui_state *State)
@@ -58,7 +61,7 @@ void UIStateInit(ui_state *State)
   State->ElementCount    = 0;
   State->NextSlot        = (State->Elements);
   State->OnePastLastSlot = (State->Elements + UI_ELEMENT_MAX_COUNT);
-  State->SelectedId = UI_NULL_ELEMENT_ID;
+  State->SelectedId   = UI_NULL_ELEMENT_ID;
   State->ZList.Top    = NULL;
   State->ZList.Bottom = NULL;
   return;
