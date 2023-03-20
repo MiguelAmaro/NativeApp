@@ -9,6 +9,9 @@
 typedef struct vertex vertex;
 struct vertex
 { v2f Pos; v3f Color; };
+typedef struct vertex3d vertex3d;
+struct vertex3d
+{ v3f Pos; v2f Uv; };
 //-TYPES
 
 typedef struct gfx_ctx gfx_ctx;
@@ -100,22 +103,27 @@ void GLLogBufferState()
       MapOffset, MapLength, Size);
   return;
 }
-void GfxCtxDraw(gfx_ctx *Ctx, ui_elm Element)
+void GfxCtxDraw(gfx_ctx *Ctx, draw_bucket *Bucket, vertex3d *Verts, u32 Count)
 {
-  glUniform2fv(glGetUniformLocation(Ctx->ShaderId, "UWinRes"), 1, GlobalRes.comp);
-  glUniform1fv(glGetUniformLocation(Ctx->ShaderId,   "URect"), 4, Element.Rect.comp);
-  glUniform4fv(glGetUniformLocation(Ctx->ShaderId,  "UColor"), 1, Element.Color.comp);
+#if 1
+  v4f Color = V4f(0.1f,0.18f, 0.1f,1.0f);
+  //GLClearErrors();
+  glBindVertexArray(Ctx->LayoutId);
   glUseProgram(Ctx->ShaderId);
-  
+  f32 Time = (f32)GlobalTimeElapsed;
+  glUniform2fv      (glGetUniformLocation(Ctx->ShaderId, "UWinRes"), 1, GlobalRes.comp);
+  glUniform1fv      (glGetUniformLocation(Ctx->ShaderId, "UTime"), 1, &Time);
+  glUniformMatrix4fv(glGetUniformLocation(Ctx->ShaderId, "UModel"), 1, 1, (f32 *)Bucket->Model);
+  glUniformMatrix4fv(glGetUniformLocation(Ctx->ShaderId, "UProjection"), 1, 1, (f32 *)Bucket->Projection);
   //Give gl buffer id and deffine the attirbutes of the vbuffer (stride, offeset)
-  glBindBuffer(GL_ARRAY_BUFFER, Ctx->VBufferId);
-  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, (2+3)*sizeof(float), NULL);
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, (2+3)*sizeof(float), (void*)(2*sizeof(float)));
-  glEnableVertexAttribArray(0);
-  glEnableVertexAttribArray(1);
+  glEnable(GL_SCISSOR_TEST);
   glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_SRC_ALPHA); //GL_ONE_MINUS_SRC_ALPHA
-  glDrawArrays(GL_TRIANGLES, 0, 6);
+  glScissor(40.0f, 1000.0f, GlobalRes.x-40.0f*2.0f, GlobalRes.y-1000.0f-40.0);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glDrawArrays(GL_LINES, 0, Count);
+  //GLPrintLastError(ThisFuncionAsString(), "test: ");
+  glDisable(GL_SCISSOR_TEST);
+#endif
   return;
 }
 void GfxCtxDrawBucketInstanced(gfx_ctx *Ctx, draw_bucket *Bucket)
@@ -127,27 +135,43 @@ void GfxCtxDrawBucketInstanced(gfx_ctx *Ctx, draw_bucket *Bucket)
                                                   GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
   if(GLIBuffer)
   {
-    LOG("poiner exists!!!!");
     memcpy(GLIBuffer, Bucket->QuadAttribs, Bucket->Count*sizeof(quad_attribs));
   }else
   {
     GLPrintLastError(ThisFuncionAsString(), "buffer mapping");
   }
   glUnmapBuffer(GL_ARRAY_BUFFER);
-  //uniforms
-  glUniform2fv(glGetUniformLocation(Ctx->ShaderId, "UWinRes"), 1, GlobalRes.comp);
   //bind layout and buffers
   glBindVertexArray(Ctx->LayoutId);
+  glUseProgram(Ctx->ShaderId);
+  //uniforms
+  glUniform2fv(glGetUniformLocation(Ctx->ShaderId, "UWinRes"), 1, GlobalRes.comp);
   //post draw effects
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
   glDrawArraysInstanced(GL_TRIANGLES, 0, 6, Bucket->Count);
   return;
 }
+u32 GfxVertexBufferCreate(void *Data, u32 Size, u32 Count)
+{
+  GLuint VertBufferId;
+  glGenBuffers(1, &VertBufferId);
+  glBindBuffer(GL_ARRAY_BUFFER, VertBufferId);
+  glBufferData(GL_ARRAY_BUFFER, Size*Count, Data, GL_STATIC_DRAW);
+  return VertBufferId;
+}
+u32 GfxInstanceBufferCreate(void *Data, u32 Size, u32 Count)
+{
+  GLuint InstanceBufferId;
+  glGenBuffers(1, &InstanceBufferId);
+  glBindBuffer(GL_ARRAY_BUFFER, InstanceBufferId);
+  glBufferData(GL_ARRAY_BUFFER, Size*Count, Data, GL_DYNAMIC_DRAW);
+  return InstanceBufferId;
+}
 u32 GfxShaderProgramCreate(const char *VertShaderSrc, s32 VertShaderSrcLength,
                            const char *FragShaderSrc, s32 FragShaderSrcLength)
 {
-  //Vert Compilationd
+  //Vert Compilation
   GLuint VertShader = glCreateShader(GL_VERTEX_SHADER);
   glShaderSource(VertShader, 1, (const GLchar **)&VertShaderSrc, &VertShaderSrcLength);
   glCompileShader(VertShader);
@@ -170,29 +194,13 @@ u32 GfxShaderProgramCreate(const char *VertShaderSrc, s32 VertShaderSrcLength,
   glDeleteShader(FragShader);
   return ShaderProgramId;
 }
-u32 GfxVertexBufferCreate(void *Data, u32 Size, u32 Count)
-{
-  GLuint VertBufferId;
-  glGenBuffers(1, &VertBufferId);
-  glBindBuffer(GL_ARRAY_BUFFER, VertBufferId);
-  glBufferData(GL_ARRAY_BUFFER, Size*Count, Data, GL_STATIC_DRAW);
-  return VertBufferId;
-}
-u32 GfxInstanceBufferCreate(void *Data, u32 Size, u32 Count)
-{
-  GLuint InstanceBufferId;
-  glGenBuffers(1, &InstanceBufferId);
-  glBindBuffer(GL_ARRAY_BUFFER, InstanceBufferId);
-  glBufferData(GL_ARRAY_BUFFER, Size*Count, Data, GL_DYNAMIC_DRAW);
-  return InstanceBufferId;
-}
 u32 GfxVertexLayoutCreate(gfx_ctx *Ctx)
 {
   u32 LayoutId = 0;
   //strides
   u32 VStride = sizeof(vertex);
   u32 IStride = sizeof(quad_attribs);
-  //vertex buffer
+  //vertex attrib array
   glGenVertexArrays(1, &LayoutId);
   glBindVertexArray(LayoutId);
   //enable attibutes
@@ -225,6 +233,57 @@ u32 GfxVertexLayoutCreate(gfx_ctx *Ctx)
   glBindVertexBuffer(1, Ctx->VBufferId, b, VStride);
   glBindVertexBuffer(2, Ctx->IBufferId, 0, IStride);
   glBindVertexBuffer(3, Ctx->IBufferId, d, IStride);
+  glBindVertexArray(0);
+  return LayoutId;
+}
+//- 3D ctx 
+u32 Gfx3dCtxShaderProgramCreate(const char *VertShaderSrc, s32 VertShaderSrcLength,
+                                const char *FragShaderSrc, s32 FragShaderSrcLength)
+{
+  //Vert Compilationd
+  GLuint VertShader = glCreateShader(GL_VERTEX_SHADER);
+  glShaderSource(VertShader, 1, (const GLchar **)&VertShaderSrc, &VertShaderSrcLength);
+  glCompileShader(VertShader);
+  //Frag Compilation
+  GLuint FragShader = glCreateShader(GL_FRAGMENT_SHADER);
+  glShaderSource(FragShader, 1, (const GLchar **)&FragShaderSrc, &FragShaderSrcLength);
+  glCompileShader(FragShader);
+  //Mergs Shaders as program
+  GLuint ShaderProgramId = glCreateProgram();
+  glAttachShader(ShaderProgramId, VertShader);
+  glAttachShader(ShaderProgramId, FragShader);
+  //input assembler per vertex/instance data
+  glBindAttribLocation(ShaderProgramId, 0, "APosition");
+  glBindAttribLocation(ShaderProgramId, 1, "AUV");
+  glLinkProgram(ShaderProgramId);
+  //cleanup
+  glDeleteShader(VertShader);
+  glDeleteShader(FragShader);
+  return ShaderProgramId;
+}
+u32 Gfx3dCtxVertexLayoutCreate(gfx_ctx *Ctx)
+{
+  u32 LayoutId = 0;
+  u32 VStride = sizeof(vertex3d);
+  //vertex attrib array
+  glGenVertexArrays(1, &LayoutId);
+  glBindVertexArray(LayoutId);
+  //enable attibutes
+  glEnableVertexAttribArray(0);
+  glEnableVertexAttribArray(1);
+  u32 a = offsetof(vertex3d, Pos);
+  u32 b = offsetof(vertex3d, Uv);
+  //pos
+  glVertexAttribFormat (0, 3, GL_FLOAT, GL_FALSE, a); 
+  glVertexAttribBinding(0, 0);
+  glVertexAttribDivisor(0, 0);
+  //uv
+  glVertexAttribFormat (1, 2, GL_FLOAT, GL_FALSE, b); 
+  glVertexAttribBinding(1, 1);
+  glVertexAttribDivisor(1, 0);
+  //vbind
+  glBindVertexBuffer(0, Ctx->VBufferId, 0, VStride);
+  glBindVertexBuffer(1, Ctx->VBufferId, b, VStride);
   glBindVertexArray(0);
   return LayoutId;
 }

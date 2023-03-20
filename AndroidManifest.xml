@@ -12,7 +12,7 @@
   <application
       android:label="AndroidC"
       android:hasCode="false"
-      android:debuggable="false">
+      android:debuggable="true">
 
     <activity android:name="android.app.NativeActivity"
               android:configChanges="orientation|keyboardHidden"

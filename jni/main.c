@@ -13,6 +13,7 @@ if(!(condition)) \
 { ((void)__android_log_print(ANDROID_LOG_WARN, "NativeApp[ASSERT]!", __VA_ARGS__)); } \
 } while(0)
 
+#define ArrayCount(array) (sizeof(array)/sizeof(array[0]))
 #define SymbolToString(symbol) #symbol
 #define ThisFuncionAsString() __FUNCTION__
 #include "types.h"
@@ -26,7 +27,8 @@ v2f GlobalTouchDelta = {0};
 b32 GlobalIsPressed = 0;
 b32 GlobalJustPressed = 0;
 b32 GlobalJustReleased = 0;
-
+f64 GlobalDeltaTime = 0;
+f64 GlobalTimeElapsed = 0;
 //Global Input
 #define ELMPUSH_BTN_ELM_ID (0)
 #define ELMPOP_BTN_ELM_ID (1)
@@ -48,8 +50,31 @@ vertex QuadData[6] =
   {{1.0f , -1.0f},    {0.f, 1.f, 0.f,} },
   {{-1.0f,  1.0f},    {1.f, 1.f, 0.f,} },
 };
-#include "engine.h"
 
+vertex3d QuadData3d[6] =
+{
+  //tri:a       v(Pos)            v(uv)
+  {{-1.f, 0.f,  1.f,}, { 0.f,  1.f,} },
+  {{ 1.f, 0.f,  1.f,}, { 1.f,  1.f,} },
+  {{ 1.f, 0.f, -1.f,}, { 1.f,  0.f,} },
+  //tri:b
+  {{-1.f, 0.f, -1.f,}, { 0.f,  0.f,} },
+  {{ 1.f, 0.f, -1.f,}, { 1.f,  0.f,} },
+  {{-1.f, 0.f,  1.f,}, { 0.f,  1.f,} },
+};
+#include "engine.h"
+u64 GetTimeNanos(void)
+{
+  struct timespec now;
+  clock_gettime(CLOCK_MONOTONIC, &now);
+  return (u64) now.tv_sec*1000000000LL + now.tv_nsec;
+}
+f64 GetTimeSeconds(void)
+{
+  struct timespec now;
+  clock_gettime(CLOCK_MONOTONIC, &now);
+  return (f64)now.tv_sec + (f64)(now.tv_nsec/(f64)1000000000.0);
+}
 void android_main(struct android_app* State)
 {
   struct engine Engine;
@@ -60,6 +85,7 @@ void android_main(struct android_app* State)
   State->onInputEvent = EngineHandleInput;
   Engine.App = State;
   
+  f64 LastTime = GetTimeSeconds();
   u32 isRunning = 1;
   while(isRunning)
   {
@@ -79,7 +105,6 @@ void android_main(struct android_app* State)
         return;
       }
     }
-    
     if (Engine.Active)
     {
       GlobalRes.x = Engine.Width;
@@ -87,5 +112,15 @@ void android_main(struct android_app* State)
       EngineUpdate(&Engine);
       EngineDrawFrame(&Engine);
     }
+    f64 CurrentTime = GetTimeSeconds();
+    GlobalDeltaTime    = CurrentTime-LastTime;
+    GlobalTimeElapsed += GlobalDeltaTime;
+    LastTime = CurrentTime;
+    /*
+    LOG("delta t: %f \n"
+        "elapsed: %f \n",
+        GlobalDeltaTime,
+          GlobalTimeElapsed);
+    */
   }
 }

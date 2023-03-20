@@ -12,11 +12,15 @@ struct draw_bucket
   //trasform (projection)
   quad_attribs QuadAttribs [DRAW_BUCKET_MAX_COUNT];
   u32 Count;
+  mat4 Model;
+  mat4 Projection;
 };
-void DrawBucketBegin(draw_bucket *Bucket)
+void DrawBucketBegin(draw_bucket *Bucket, mat4 Model, mat4 Projection)
 {
   // TODO(MIGUEL): zero QuadAttribs array, maybe?
   Bucket->Count = 0;
+  if(Model     ) { memcpy(Bucket->Model     , Model     , sizeof(mat4)); }
+  if(Projection) { memcpy(Bucket->Projection, Projection, sizeof(mat4)); }
   return;
 }
 void DrawBucketEnd(draw_bucket *Bucket)
@@ -25,6 +29,11 @@ void DrawBucketEnd(draw_bucket *Bucket)
 }
 void DrawBucketPushText(draw_bucket *Bucket)
 {
+  return;
+}
+void DrawBucketPushQuad(draw_bucket *Bucket, u32 Count)
+{
+  //vertex3d *Verts, 
   return;
 }
 void DrawBucketPushUIElements(draw_bucket *Bucket, ui_elm *Elements, u32 Count)
